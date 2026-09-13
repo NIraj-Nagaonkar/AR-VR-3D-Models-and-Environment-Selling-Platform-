@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether 3D Dashboard &amp; AR/VR Models</title>
+    <!-- Include Three.js for Hero Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Include FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Link External Stylesheet -->
+    <link rel="stylesheet" href="Admin.css">
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header>
+        <div class="nav-container">
+            <a href="#" class="logo"><i class="fa-solid fa-cube"></i>Aether<span>3D</span></a>
+            <div class="nav-actions">
+                <button class="btn btn-outline btn-sm" onclick="toggleAiChatDrawer()" style="border-color: var(--accent-cyan); color: var(--accent-cyan);"> Chat with AI</button>
+                <!-- 3-line Hamburger Menu Button -->
+                <button class="menu-toggle" onclick="toggleMenuDropdown()" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+        <!-- Dropdown Menu Options -->
+        <div class="dropdown-menu" id="menuDropdown">
+            <a class="dropdown-item" onclick="visitClientDashboard()"><i class="fa-solid fa-display"></i> Visit Client Dashboard</a>
+            <a class="dropdown-item" onclick="openModal('profileModal')"><i class="fa-solid fa-user"></i> Profile</a>
+            <a class="dropdown-item" onclick="openModal('settingsModal')"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a class="dropdown-item" onclick="showNotifications()"><i class="fa-solid fa-bell"></i> Notifications</a>
+            <a class="dropdown-item" onclick="visitWorkSpace()"><i class="fa-solid fa-laptop-code"></i> WorkSpace</a>
+        </div>
+    </header>
+
+    <!-- Hero Section with Canvas Background -->
+    <section class="hero">
+        <canvas id="hero-canvas"></canvas>
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Next-Gen AR/VR Models &amp; Environments</h1>
+                <p>Explore high-fidelity company 3D AR/VR models and immersive spatial environments powered by real-time WebGL rendering systems.</p>
+                <div class="hero-actions">
+                    <a href="#assets" class="btn btn-accent">Explore 3D Assets</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard 3D AR/VR Model Asset Section (Only Main Section) -->
+    <section id="assets" class="section-padding">
+        <div class="container">
+            <div class="section-header" style="max-width: 100%;">
+                <div>
+                    <h2>Company 3D AR/VR Models &amp; Environments</h2>
+                    <p>Inspect spatial visualization assets, interact with digital twins, and manage immersive environment configurations.</p>
+                    
+                    <!-- Portfolio Filter Tabs -->
+                    <div class="asset-tags" style="margin-top: 1.5rem; gap: 0.75rem;">
+                        <button class="btn btn-outline btn-sm tab-btn active" onclick="filterAssets('all')" style="color: var(--text-dark); border-color: #CBD5E1;">All Models</button>
+                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('ar')" style="color: var(--text-dark); border-color: #CBD5E1;">AR Assets</button>
+                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('vr')" style="color: var(--text-dark); border-color: #CBD5E1;">VR Environments</button>
+                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('twins')" style="color: var(--text-dark); border-color: #CBD5E1;">Digital Twins</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asset Grid Layout -->
+            <div class="asset-grid" id="assetGridContainer">
+                
+                <!-- Card 1 -->
+                <div class="asset-card" data-category="ar">
+                    <div class="asset-preview">
+                        
+                        <div class="asset-badge">AR Ready</div>
+                    </div>
+                    <div class="asset-details">
+                        <h4>Industrial Machinery Twin</h4>
+                        <div class="asset-tags">
+                            <span class="tag">GLTF</span>
+                            <span class="tag">AR.js</span>
+                        </div>
+                        <div class="asset-footer">
+                            <span class="asset-price">v3.2.0</span>
+                            <button class="btn btn-primary btn-sm">Inspect 3D</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="asset-card" data-category="vr">
+                    <div class="asset-preview">
+                        
+                        <div class="asset-badge" style="background: rgba(0, 112, 173, 0.85);">VR Immersive</div>
+                    </div>
+                    <div class="asset-details">
+                        <h4>Virtual Showroom Environment</h4>
+                        <div class="asset-tags">
+                            <span class="tag">Three.js</span>
+                            <span class="tag">WebXR</span>
+                        </div>
+                        <div class="asset-footer">
+                            <span class="asset-price">v1.9.4</span>
+                            <button class="btn btn-primary btn-sm">Inspect 3D</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="asset-card" data-category="twins">
+                    <div class="asset-preview">
+                        
+                        <div class="asset-badge" style="background: rgba(16, 185, 129, 0.85);">Optimized</div>
+                    </div>
+                    <div class="asset-details">
+                        <h4>Smart Facility Spatial Map</h4>
+                        <div class="asset-tags">
+                            <span class="tag">PointCloud</span>
+                            <span class="tag">WebGL</span>
+                        </div>
+                        <div class="asset-footer">
+                            <span class="asset-price">v4.0.1</span>
+                            <button class="btn btn-primary btn-sm">Inspect 3D</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Queue Project Request Section -->
+    <section class="section-padding queue-section">
+        <div class="container">
+            <div class="section-header" style="max-width: 100%;">
+                <h2>Incoming Project Requests Queue</h2>
+                <p>Review incoming client project configuration requests, inspect spatial asset details, and manage approval queues.</p>
+            </div>
+
+            <div class="queue-table-container">
+                <table class="queue-table">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Client Name</th>
+                            <th>Project Title</th>
+                            <th>Category</th>
+                            <th>Submitted Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queueTableBody">
+                        <!-- Empty state row initialization (No false mockup records pre-loaded) -->
+                        <tr id="emptyQueueRow">
+                            <td colspan="7" class="empty-queue-row">No active project requests in queue. (Waiting for incoming client submissions)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-user-gear"></i> User Profile</h3>
+                <button class="close-drawer-btn" onclick="closeModal('profileModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveProfile(event)">
+                <div class="modal-body">
+                    <div class="modal-group">
+                        <label for="profileName">Full Name</label>
+                        <input type="text" id="profileName" value="Niraj Nagaonkar" required>
+                    </div>
+                    <div class="modal-group">
+                        <label for="profileEmail">Email Address</label>
+                        <input type="email" id="profileEmail" value="niraj@aether3d.dev" required>
+                    </div>
+                    <div class="modal-group">
+                        <label for="profileRole">Access Role</label>
+                        <input type="text" id="profileRole" value="Lead Spatial Developer" disabled>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline btn-sm" style="color: var(--text-dark); border-color: #CBD5E1;" onclick="closeModal('profileModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content-box">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-sliders"></i> System Settings</h3>
+                <button class="close-drawer-btn" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveSettings(event)">
+                <div class="modal-body">
+                    <div class="modal-group">
+                        <label for="envSelect">Default 3D Quality</label>
+                        <select id="envSelect">
+                            <option value="ultra" selected>Ultra (Full PBR Textures)</option>
+                            <option value="balanced">Balanced (Optimized LOD)</option>
+                            <option value="performance">Performance (Low Poly)</option>
+                        </select>
+                    </div>
+                    <div class="modal-group">
+                        <label for="refreshRate">Renderer Frame Rate</label>
+                        <select id="refreshRate">
+                            <option value="60fps" selected>60 FPS Target</option>
+                            <option value="120fps">120 FPS High Refresh</option>
+                            <option value="unlimited">Unlimited VSync Off</option>
+                        </select>
+                    </div>
+                    <div class="modal-group">
+                        <label for="apiKeyInput">Aether AI Core API Key</label>
+                        <input type="password" id="apiKeyInput" value="••••••••••••••••••••" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline btn-sm" style="color: var(--text-dark); border-color: #CBD5E1;" onclick="closeModal('settingsModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save Preferences</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Right-Side AI Assistant Chat Drawer -->
+    <div class="ai-chat-drawer" id="aiChatDrawer">
+        <div class="chat-drawer-header">
+            <h3><i class="fa-solid fa-microchip"></i> Aether 3D <span>AI Core</span></h3>
+            <button class="close-drawer-btn" onclick="toggleAiChatDrawer()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="chat-drawer-messages" id="chatMessages">
+            <div class="message assistant">Hello Niraj! I am your Aether 3D assistant. How can I help you explore your company's AR/VR models today?</div>
+        </div>
+        <form class="chat-drawer-input-area" id="chatForm" onsubmit="handleSendMessage(event)">
+            <input type="text" id="chatInput" placeholder="Ask AI about 3D AR/VR models..." autocomplete="off" required>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+    </div>
+
+    <!-- Include External Script File -->
+    <script src="Admin.js"></script>
+</body>
+</html>

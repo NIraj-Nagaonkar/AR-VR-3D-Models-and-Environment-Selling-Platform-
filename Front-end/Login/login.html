@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+
+    <div class="login-box">
+        <div class="login-header">
+            <div class="user-icon-container">
+                <i class="fa-regular fa-user"></i>
+            </div>
+            <h1>CUSTOMER LOGIN</h1>
+        </div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <i class="fa-regular fa-envelope"></i>
+                <input type="email" id="email" placeholder="Email ID" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+
+            <div class="form-actions">
+                <label class="remember-me">
+                    <input type="checkbox"> Remember me
+                </label>
+                <a href="#" class="forgot-password">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="login-btn">LOGIN</button>
+
+            <!-- Link to navigate to the Sign Up page -->
+            <div class="switch-page-container">
+                <p>Don't have an account?</p>
+                <a href="sign-up.html" class="secondary-btn">CREATE ACCOUNT</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

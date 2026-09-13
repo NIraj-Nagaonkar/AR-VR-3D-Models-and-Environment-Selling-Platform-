@@ -1,0 +1,35 @@
+Major_Project/
+├── Assets/                     # Images/videos (static assets)
+├── Backend/
+│   └── src/
+│       └── Modules/            # ⚠️ empty right now
+├── Front-end/
+│   ├── Admin/                  # Admin.html/css/js, Workspace.html
+│   ├── Customer/                # Customer.html/css/js
+│   └── Login/                  # login + sign-up html/css/js
+├── package.json                 # only has "mongoose": "^9.10.0"
+└── package-lock.json
+
+
+
+Backend structure
+
+
+Backend/
+├── src/
+│   ├── config/
+│   │   └── db.js              # ⬅ MongoDB connection code goes HERE
+│   ├── Modules/                # keep this — use it for feature modules
+│   │   ├── User/
+│   │   │   ├── user.model.js
+│   │   │   ├── user.controller.js
+│   │   │   └── user.routes.js
+│   │   ├── Product/             # your 3D models/listings
+│   │   │   ├── product.model.js
+│   │   │   ├── product.controller.js
+│   │   │   └── product.routes.js
+│   │   └── Order/
+│   ├── middleware/
+│   └── server.js               # entry point, starts Express + calls db.js
+├── .env                         # MONGO_URI lives here (gitignore this!)
+└── package.jsons

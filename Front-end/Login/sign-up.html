@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Sign Up</title>
+    <!-- Import Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <!-- Import Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Link to your Sign Up CSS file -->
+    <link rel="stylesheet" href="sign-up.css">
+</head>
+<body>
+
+    <div class="signup-box">
+        <div class="signup-header">
+            <div class="user-icon-container">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h1>CREATE ACCOUNT</h1>
+        </div>
+
+        <form id="signupForm">
+            <div class="input-group">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="fullname" placeholder="Full Name" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-regular fa-envelope"></i>
+                <input type="email" id="email" placeholder="Email ID" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+            </div>
+
+            <button type="submit" class="signup-btn">SIGN UP</button>
+
+            <!-- Link to navigate back to the Login page -->
+            <div class="switch-page-container">
+                <p>Already have an account?</p>
+                <a href="login.html" class="secondary-btn">GO TO LOGIN</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="sign-up.js"></script>
+</body>
+</html>

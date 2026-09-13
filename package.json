@@ -1,0 +1,22 @@
+{
+  "name": "ar-vr-3d-models-platform",
+  "version": "1.0.0",
+  "description": "AR/VR 3D Models and Environment Selling Platform",
+  "main": "Backend/src/server.js",
+  "scripts": {
+    "start": "node Backend/src/server.js",
+    "dev": "nodemon Backend/src/server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.10.0",
+    "multer": "^2.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

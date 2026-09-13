@@ -1,0 +1,176 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat', sans-serif;
+}
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Background image using relative path */
+    background-image: url('images/Anime1.jpeg'); 
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+    color: #ffffff;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 400px;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.5); 
+    border-radius: 12px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.user-icon-container {
+    width: 80px;
+    height: 80px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.user-icon-container i {
+    font-size: 40px;
+    color: #3574c8;
+}
+
+.login-header h1 {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 2px;
+}
+
+.input-group {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.input-group i {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #ffffff;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 10px 10px 35px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #ffffff;
+    color: #ffffff;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.input-group input::placeholder {
+    color: #ffffff;
+    opacity: 0.9;
+}
+
+.input-group input:focus {
+    border-bottom: 1px solid #a3c7fc;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+    font-size: 13px;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.remember-me input {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.forgot-password {
+    color: #ffffff;
+    text-decoration: none;
+    font-style: italic;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: #083b7c;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #062b5a;
+}
+
+/* --- Page Switcher Section --- */
+.switch-page-container {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.switch-page-container p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 10px;
+}
+
+/* Secondary Outline Button */
+.secondary-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background-color: transparent;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    text-decoration: none;
+}
