@@ -54,7 +54,7 @@ The Express backend seamlessly serves both the REST API and the static frontend 
 - **File Uploads**: [Multer](https://github.com/expressjs/multer)
 - **Frontend**: Vanilla HTML5, Modern CSS (Glassmorphism & Dark Mode), Vanilla JavaScript (ES6+)
 - **External AI Integrations**:
-  - Google Gemini API (`gemini-2.5-flash` / `gemini-1.5-flash`)
+  - Google Gemini API (`gemini-3.6-flash` / `gemini-3.6-pro`)
   - Luma AI Dream Machine / Agents API (`uni-1`, `ray-3.2`)
 
 ---

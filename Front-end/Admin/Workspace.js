@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Configuration ---
   const DEFAULT_GEMINI_KEY = "";
-  const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+  const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
   const DEFAULT_LUMA_KEY = "";
   const DEFAULT_LUMA_MODEL = "uni-1";
   const SESSIONS_STORAGE_KEY = "ather_chat_sessions";
@@ -97,7 +97,12 @@ Your responsibilities:
   }
 
   function getActiveModel() {
-    return localStorage.getItem('ather_gemini_model') || DEFAULT_GEMINI_MODEL;
+    const saved = localStorage.getItem('ather_gemini_model');
+    if (!saved || saved.includes('2.5') || saved.includes('1.5')) {
+      localStorage.setItem('ather_gemini_model', DEFAULT_GEMINI_MODEL);
+      return DEFAULT_GEMINI_MODEL;
+    }
+    return saved;
   }
 
   function getActiveLumaKey() {

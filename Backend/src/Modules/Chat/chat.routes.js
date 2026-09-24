@@ -4,6 +4,9 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     let { contents, prompt, message, system_instruction, model = 'gemini-3.6-flash' } = req.body;
+    if (!model || model.includes('2.5') || model.includes('1.5')) {
+      model = 'gemini-3.6-flash';
+    }
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
