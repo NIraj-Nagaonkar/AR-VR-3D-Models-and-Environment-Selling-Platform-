@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Configuration ---
   const DEFAULT_GEMINI_KEY = "";
-  const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
+  const DEFAULT_GEMINI_MODEL = "gemini-flash-latest";
   const DEFAULT_LUMA_KEY = "";
   const DEFAULT_LUMA_MODEL = "uni-1";
   const SESSIONS_STORAGE_KEY = "ather_chat_sessions";
@@ -465,51 +465,108 @@ Your responsibilities:
 
     // 5. Request Google Gemini API (Direct if custom key configured, or via backend /api/chat)
     const apiKey = getActiveApiKey();
-    const model = getActiveModel();
+    const preferredModel = getActiveModel();
 
     try {
       let response;
-      if (apiKey) {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const requestBody = {
-          system_instruction: {
-            parts: [{ text: SYSTEM_INSTRUCTION }]
-          },
-          contents: conversationHistory,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 2048
-          }
-        };
+      let data;
 
-        response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
-        });
+      if (apiKey) {
+        // Resilient failover cascade for direct API key
+        const candidateModels = [
+          preferredModel,
+          'gemini-flash-latest',
+          'gemini-3.5-flash',
+          'gemini-3.6-flash',
+          'gemini-3.5-flash-lite'
+        ].filter((m, i, arr) => m && arr.indexOf(m) === i);
+
+        let lastErrData = null;
+
+        for (const candModel of candidateModels) {
+          try {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candModel}:generateContent?key=${apiKey}`;
+            const requestBody = {
+              system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+              contents: conversationHistory,
+              generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+            };
+
+            response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(requestBody)
+            });
+
+            data = await response.json();
+
+            if (response.ok) break;
+
+            const errText = data.error?.message || '';
+            const isHighDemand = 
+              response.status === 503 || 
+              response.status === 429 || 
+              errText.toLowerCase().includes('high demand') ||
+              errText.toLowerCase().includes('overloaded');
+
+            if (isHighDemand && candModel !== candidateModels[candidateModels.length - 1]) {
+              console.warn(`[Ather3D] Model ${candModel} high demand (HTTP ${response.status}). Failing over to next candidate...`);
+              await new Promise(r => setTimeout(r, 600));
+              continue;
+            }
+
+            lastErrData = data;
+          } catch (fetchErr) {
+            console.warn(`[Ather3D] Model ${candModel} request failed:`, fetchErr);
+          }
+        }
+
+        if (!response || !response.ok) {
+          data = lastErrData || data || {};
+        }
       } else {
+        // Use resilient backend proxy /api/chat
         response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: conversationHistory,
-            system_instruction: {
-              parts: [{ text: SYSTEM_INSTRUCTION }]
-            },
-            model
+            system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+            model: preferredModel
           })
         });
+        data = await response.json();
       }
-
-      const data = await response.json();
 
       if (!response.ok || (data.success === false && !data.candidates && !data.reply)) {
         const errorMsg = data.error?.message || data.message || `HTTP ${response.status} ${response.statusText}`;
-        bubble.innerHTML = `<span style="color: #f87171;"><i class="fa-solid fa-triangle-exclamation"></i> <strong>AI Assistant Error:</strong> ${escapeHtml(errorMsg)}<br/><small style="color: var(--text-muted); margin-top: 4px; display: block;">Configure your API key in <a href="#" id="errorSettingsLink" style="color: var(--accent-purple);">Settings</a> or Backend/.env.</small></span>`;
+        const isHighDemand = errorMsg.toLowerCase().includes('high demand') || response.status === 503;
+        
+        const helpNote = isHighDemand
+          ? "Google Gemini servers are experiencing temporary regional traffic. You can retry immediately with the resilient fallback model below."
+          : "Configure your API key in <a href='#' id='errorSettingsLink' style='color: var(--accent-purple);'>Settings</a> or Backend/.env.";
+
+        bubble.innerHTML = `
+          <span style="color: #f87171;">
+            <i class="fa-solid fa-triangle-exclamation"></i> <strong>AI Assistant Notice:</strong> ${escapeHtml(errorMsg)}<br/>
+            <small style="color: var(--text-muted); margin-top: 4px; display: block;">${helpNote}</small>
+            <button id="quickRetryPromptBtn" style="margin-top: 8px; padding: 4px 12px; background: rgba(192, 132, 252, 0.15); border: 1px solid rgba(192, 132, 252, 0.4); border-radius: 6px; color: #c084fc; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;">
+              <i class="fa-solid fa-rotate-right"></i> Retry Prompt
+            </button>
+          </span>
+        `;
         
         document.getElementById('errorSettingsLink')?.addEventListener('click', (e) => {
           e.preventDefault();
           openSettingsModal();
+        });
+
+        document.getElementById('quickRetryPromptBtn')?.addEventListener('click', () => {
+          localStorage.setItem('ather_gemini_model', 'gemini-flash-latest');
+          if (promptInput) {
+            promptInput.value = text;
+            handleSendMessage();
+          }
         });
         
         conversationHistory.pop();
