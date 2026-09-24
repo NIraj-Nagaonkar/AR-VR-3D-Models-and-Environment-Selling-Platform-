@@ -174,3 +174,33 @@ body {
     background-color: rgba(255, 255, 255, 0.15);
     text-decoration: none;
 }
+
+/* Authentication Alert Notifications */
+.auth-alert {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+    animation: alertFadeIn 0.25s ease-out;
+}
+
+.auth-alert.error {
+    background: rgba(220, 38, 38, 0.35);
+    border: 1px solid rgba(239, 68, 68, 0.6);
+    color: #fca5a5;
+}
+
+.auth-alert.success {
+    background: rgba(16, 185, 129, 0.35);
+    border: 1px solid rgba(52, 211, 153, 0.6);
+    color: #a7f3d0;
+}
+
+@keyframes alertFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}

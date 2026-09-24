@@ -1,35 +1,102 @@
+# Ather3D Project File Structure & Run Guide
+
+## Project Structure
+
+```text
 Major_Project/
-├── Assets/                     # Images/videos (static assets)
+├── Assets/                    # Images/videos/branding (static assets)
 ├── Backend/
+│   ├── .env                   # Environment variables (MONGO_URI, PORT, JWT_SECRET, etc.)
+│   ├── .env.example           # Template for environment variables
+│   ├── uploads/               # Uploaded blueprints and client references
 │   └── src/
-│       └── Modules/            # ⚠️ empty right now
+│       ├── config/
+│       │   └── db.js          # MongoDB connection via Mongoose
+│       ├── middleware/        # Express middlewares
+│       ├── Modules/           # Feature modules
+│       │   ├── User/          # Authentication & user profile
+│       │   │   ├── user.model.js
+│       │   │   ├── user.controller.js
+│       │   │   └── user.routes.js
+│       │   ├── Product/       # 3D models & environment listings
+│       │   │   ├── product.model.js
+│       │   │   ├── product.controller.js
+│       │   │   └── product.routes.js
+│       │   ├── Request/       # Custom 3D client requests with file uploads
+│       │   │   ├── request.model.js
+│       │   │   ├── request.controller.js
+│       │   │   └── request.routes.js
+│       │   ├── Chat/          # Gemini Spatial AI Chat endpoint
+│       │   │   └── chat.routes.js
+│       │   └── Luma/          # Luma AI 3D/video generation endpoints
+│       │       └── luma.routes.js
+│       └── server.js          # Main entry point: starts Express & serves Front-end
 ├── Front-end/
-│   ├── Admin/                  # Admin.html/css/js, Workspace.html
-│   ├── Customer/                # Customer.html/css/js
-│   └── Login/                  # login + sign-up html/css/js
-├── package.json                 # only has "mongoose": "^9.10.0"
-└── package-lock.json
+│   ├── Admin/
+│   │   ├── Admin.html / css / js       # Admin management dashboard
+│   │   └── Workspace.html / css / js   # Ather3D Workspace Studio (Spatial AI & 3D Generator)
+│   ├── Customer/
+│   │   └── Customer.html / css / js    # Customer 3D request submission portal
+│   └── Login/
+│       ├── login.html / css / js       # User/Admin login
+│       └── sign-up.html / css / js     # User registration
+├── package.json               # Project scripts & dependencies (express, mongoose, etc.)
+├── package-lock.json
+├── README.md                  # Main project documentation & run instructions
+└── Readme/
+    └── file_structure         # This documentation file
+```
 
+---
 
+## How to Run the Application
 
-Backend structure
+### 1. Prerequisites
+- **Node.js**: v16 or higher installed
+- **MongoDB**: MongoDB Community Server running locally on `mongodb://127.0.0.1:27017` (or a MongoDB Atlas connection string)
 
+### 2. Install Dependencies
+Open terminal in `Major_Project` root:
+```bash
+npm install
+```
 
-Backend/
-├── src/
-│   ├── config/
-│   │   └── db.js              # ⬅ MongoDB connection code goes HERE
-│   ├── Modules/                # keep this — use it for feature modules
-│   │   ├── User/
-│   │   │   ├── user.model.js
-│   │   │   ├── user.controller.js
-│   │   │   └── user.routes.js
-│   │   ├── Product/             # your 3D models/listings
-│   │   │   ├── product.model.js
-│   │   │   ├── product.controller.js
-│   │   │   └── product.routes.js
-│   │   └── Order/
-│   ├── middleware/
-│   └── server.js               # entry point, starts Express + calls db.js
-├── .env                         # MONGO_URI lives here (gitignore this!)
-└── package.jsons
+### 3. Verify Environment Variables
+Ensure `Backend/.env` exists (see `Backend/.env.example`):
+```env
+PORT=5000
+MONGO_URI=mongodb://127.0.0.1:27017/myapp
+JWT_SECRET=ather3d_secure_jwt_token_secret_2026
+ADMIN_EMAIL=Ather3dAdmin@gmail.com
+GEMINI_API_KEY=your_gemini_api_key_here
+LUMA_API_KEY=your_luma_api_key_here
+```
+
+### 4. Start MongoDB
+- **Windows**: Start MongoDB service if not already running:
+  ```powershell
+  net start MongoDB
+  ```
+- **macOS / Linux**:
+  ```bash
+  sudo systemctl start mongod
+  ```
+
+### 5. Launch the Server
+In the root directory, run:
+```bash
+# Development mode (auto-reload on edit):
+npm run dev
+
+# Or standard mode:
+npm start
+```
+
+### 6. Access in Browser
+Once running, open:
+- **Application Portal (Login)**: [http://localhost:5000](http://localhost:5000) (or [http://localhost:5000/login](http://localhost:5000/login))
+- **Sign Up**: [http://localhost:5000/signup](http://localhost:5000/signup)
+- **Admin Dashboard**: [http://localhost:5000/admin](http://localhost:5000/admin) *(Sign up with `Ather3dAdmin@gmail.com` for admin role)*
+- **Workspace (Spatial AI & 3D Generator)**: [http://localhost:5000/workspace](http://localhost:5000/workspace)
+- **Customer Portal**: [http://localhost:5000/customer](http://localhost:5000/customer) *(Any standard user signup)*
+- **Health Check**: [http://localhost:5000/api/health](http://localhost:5000/api/health)

@@ -190,49 +190,64 @@ async function handleSendMessage(event) {
 
 // --- Queue Project Request Management Logic ---
 
-// Function handle queue item decisions (Accept / Reject) - now persists to backend
+// Function handle queue item decisions (Accept / Reject) - persists to backend
 async function handleQueueAction(buttonElement, decision) {
     const row = buttonElement.closest('tr');
     const statusCell = row.querySelector('.status-badge');
-    const actionsCell = row.querySelector('.queue-actions');
+    const actionsCell = row.querySelector('.queue-actions') || buttonElement.parentElement;
     const mongoId = row.getAttribute('data-mongo-id');
 
     const newStatus = decision === 'accept' ? 'Accepted' : 'Rejected';
 
+    // Disable buttons while updating
+    const buttons = row.querySelectorAll('button');
+    buttons.forEach(b => b.disabled = true);
+
     // Update backend first (if this row came from the database)
     if (mongoId) {
         try {
-            const response = await fetch(`http://localhost:5000/api/requests/${mongoId}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
-            });
+            let response;
+            try {
+                response = await fetch(`http://localhost:5000/api/requests/${mongoId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+            } catch (err) {
+                response = await fetch(`http://127.0.0.1:5000/api/requests/${mongoId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus }),
+                });
+            }
+
             const data = await response.json();
             if (!data.success) {
-                alert('Could not update status: ' + data.message);
+                alert('Could not update status: ' + (data.message || 'Server error'));
+                buttons.forEach(b => b.disabled = false);
                 return;
             }
         } catch (error) {
             alert('Could not reach the server to update status.');
             console.error('Status update error:', error);
+            buttons.forEach(b => b.disabled = false);
             return;
         }
     }
 
     if (decision === 'accept') {
         statusCell.className = 'status-badge accepted';
-        statusCell.innerText = 'Accepted';
-        actionsCell.innerHTML = '<span style="color: #059669; font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-check"></i> Approved</span>';
+        statusCell.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Accepted</span>';
+        actionsCell.innerHTML = '<span class="action-status-approved"><i class="fa-solid fa-check"></i> Approved</span>';
     } else if (decision === 'reject') {
         statusCell.className = 'status-badge rejected';
-        statusCell.innerText = 'Rejected';
-        actionsCell.innerHTML = '<span style="color: #DC2626; font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-xmark"></i> Declined</span>';
+        statusCell.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> <span>Rejected</span>';
+        actionsCell.innerHTML = '<span class="action-status-declined"><i class="fa-solid fa-xmark"></i> Declined</span>';
     }
 }
 
-// Optional utility function to dynamically inject a request row if you want to test UI behavior locally
-// mongoId (optional): if provided, Accept/Reject buttons will persist status changes to the backend
-function addSampleRequestToQueue(requestId, clientName, projectTitle, category, date, status = 'Pending', mongoId = null) {
+// Utility function to dynamically inject a request row into the queue table
+function addSampleRequestToQueue(requestId, clientName, projectTitle, category, date, status = 'Pending', mongoId = null, email = '') {
     const tbody = document.getElementById('queueTableBody');
     const emptyRow = document.getElementById('emptyQueueRow');
     if (emptyRow) emptyRow.remove();
@@ -248,18 +263,30 @@ function addSampleRequestToQueue(requestId, clientName, projectTitle, category, 
         </div>
     `;
     if (status === 'Accepted') {
-        actionsHtml = '<span style="color: #059669; font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-check"></i> Approved</span>';
+        actionsHtml = '<div class="queue-actions"><span class="action-status-approved"><i class="fa-solid fa-check"></i> Approved</span></div>';
     } else if (status === 'Rejected') {
-        actionsHtml = '<span style="color: #DC2626; font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-xmark"></i> Declined</span>';
+        actionsHtml = '<div class="queue-actions"><span class="action-status-declined"><i class="fa-solid fa-xmark"></i> Declined</span></div>';
     }
 
+    let statusIcon = '<i class="fa-solid fa-clock"></i>';
+    if (statusClass === 'accepted') statusIcon = '<i class="fa-solid fa-circle-check"></i>';
+    if (statusClass === 'rejected') statusIcon = '<i class="fa-solid fa-circle-xmark"></i>';
+
     newRow.innerHTML = `
-        <td>#${requestId}</td>
-        <td>${clientName}</td>
-        <td>${projectTitle}</td>
-        <td><span class="tag">${category}</span></td>
-        <td>${date}</td>
-        <td><span class="status-badge ${statusClass}">${status}</span></td>
+        <td><span class="request-id-badge">#${requestId}</span></td>
+        <td>
+            <div class="client-name-cell" title="${email || clientName}">
+                <div class="client-avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="client-info">
+                    <span class="client-name">${clientName}</span>
+                    ${email ? `<span class="client-email">${email}</span>` : ''}
+                </div>
+            </div>
+        </td>
+        <td class="project-title-cell" title="${projectTitle}">${projectTitle}</td>
+        <td><span class="category-badge">${category}</span></td>
+        <td class="date-cell">${date}</td>
+        <td><span class="status-badge ${statusClass}">${statusIcon} <span>${status}</span></span></td>
         <td>${actionsHtml}</td>
     `;
     tbody.appendChild(newRow);
@@ -275,34 +302,64 @@ const PLATFORM_LABELS = {
 };
 
 async function loadRequestsFromServer() {
+    const tbody = document.getElementById('queueTableBody');
+    const counter = document.getElementById('queueCounter');
+
     try {
-        const response = await fetch('http://localhost:5000/api/requests');
+        let response;
+        try {
+            response = await fetch('http://localhost:5000/api/requests');
+        } catch (err) {
+            response = await fetch('http://127.0.0.1:5000/api/requests');
+        }
+
         const data = await response.json();
 
         if (!data.success || !data.requests || data.requests.length === 0) {
-            return; // leave the "No active project requests" empty state as-is
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr id="emptyQueueRow">
+                        <td colspan="7" class="empty-queue-row">
+                            <div class="empty-queue-content">
+                                <i class="fa-regular fa-folder-open"></i>
+                                <span>No active project requests in queue. (Waiting for incoming client submissions)</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            if (counter) counter.innerHTML = '<i class="fa-solid fa-inbox"></i> 0 Requests';
+            return;
+        }
+
+        if (tbody) tbody.innerHTML = '';
+        if (counter) {
+            const count = data.requests.length;
+            counter.innerHTML = `<i class="fa-solid fa-list-check"></i> ${count} Project Request${count === 1 ? '' : 's'}`;
         }
 
         data.requests.forEach((req) => {
-            const shortId = req._id.slice(-6).toUpperCase();
-            const projectTitle = req.specifications.length > 40
+            const shortId = req._id ? req._id.slice(-6).toUpperCase() : 'REQ';
+            const projectTitle = req.specifications && req.specifications.length > 40
                 ? req.specifications.slice(0, 40) + '...'
-                : req.specifications;
-            const category = PLATFORM_LABELS[req.targetPlatform] || req.targetPlatform;
-            const date = new Date(req.createdAt).toLocaleDateString();
+                : (req.specifications || 'Untitled Request');
+            const category = PLATFORM_LABELS[req.targetPlatform] || req.targetPlatform || 'General';
+            const date = req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'Recent';
 
             addSampleRequestToQueue(
                 shortId,
-                req.fullName,
+                req.fullName || 'Client',
                 projectTitle,
                 category,
                 date,
-                req.status,
-                req._id
+                req.status || 'Pending',
+                req._id,
+                req.workEmail || ''
             );
         });
     } catch (error) {
         console.error('Could not load requests from server:', error);
+        if (counter) counter.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Server Offline';
     }
 }
 

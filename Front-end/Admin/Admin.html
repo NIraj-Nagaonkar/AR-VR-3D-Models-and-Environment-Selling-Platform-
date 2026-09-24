@@ -136,9 +136,17 @@
     <!-- Queue Project Request Section -->
     <section class="section-padding queue-section">
         <div class="container">
-            <div class="section-header" style="max-width: 100%;">
-                <h2>Incoming Project Requests Queue</h2>
-                <p>Review incoming client project configuration requests, inspect spatial asset details, and manage approval queues.</p>
+            <div class="queue-section-header">
+                <div>
+                    <h2>Incoming Project Requests Queue</h2>
+                    <p>Review incoming client project configuration requests, inspect spatial asset details, and manage approval queues.</p>
+                </div>
+                <div class="queue-header-actions">
+                    <span class="queue-counter" id="queueCounter"><i class="fa-solid fa-list-check"></i> Loading requests...</span>
+                    <button class="btn btn-refresh btn-sm" onclick="loadRequestsFromServer()" title="Refresh Queue">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh
+                    </button>
+                </div>
             </div>
 
             <div class="queue-table-container">
@@ -157,7 +165,12 @@
                     <tbody id="queueTableBody">
                         <!-- Empty state row initialization (No false mockup records pre-loaded) -->
                         <tr id="emptyQueueRow">
-                            <td colspan="7" class="empty-queue-row">No active project requests in queue. (Waiting for incoming client submissions)</td>
+                            <td colspan="7" class="empty-queue-row">
+                                <div class="empty-queue-content">
+                                    <i class="fa-regular fa-folder-open"></i>
+                                    <span>No active project requests in queue. (Waiting for incoming client submissions)</span>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

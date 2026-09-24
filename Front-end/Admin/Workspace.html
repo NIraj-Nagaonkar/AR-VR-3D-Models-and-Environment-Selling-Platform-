@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ather3D Workspace - Spatial AI & 3D Studio</title>
+  <link rel="stylesheet" href="Workspace.css" />
+  <!-- FontAwesome Icons (Reliable Vector Icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Collapsible Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Sidebar Header -->
+      <div class="sidebar-header">
+        <button class="icon-btn" id="menuBtn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <button class="new-chat-btn" id="newChatBtn" title="Start New Session">
+          <i class="fa-solid fa-plus"></i>
+          <span class="btn-text">New Chat</span>
+        </button>
+      </div>
+
+      <!-- Chat History -->
+      <div class="recent-section">
+        <div class="section-label">Chat History</div>
+        <ul class="chat-list" id="recentList">
+          <!-- Dynamically populated from real chat history -->
+        </ul>
+      </div>
+
+      <!-- Sidebar Footer Navigation -->
+      <div class="sidebar-footer">
+        <a href="Admin.html" class="footer-nav-item" title="Back to Admin Dashboard">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span class="btn-text">Dashboard</span>
+        </a>
+        <a href="#docs" class="footer-nav-item" title="Documentation">
+          <i class="fa-regular fa-file-lines"></i>
+          <span class="btn-text">Documentation</span>
+        </a>
+        <a href="#activity" class="footer-nav-item" title="Activity">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span class="btn-text">Activity</span>
+        </a>
+        <button class="footer-nav-item" id="settingsBtn" title="Settings" style="background: none; border: none; cursor: pointer; text-align: left; font-family: inherit;">
+          <i class="fa-solid fa-gear"></i>
+          <span class="btn-text">Settings</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navigation -->
+      <header class="top-nav">
+        <div class="brand">
+          <a href="Admin.html" class="brand-logo">
+            <i class="fa-solid fa-cube logo-icon"></i>
+            <span>Ather<strong>3D</strong></span>
+          </a>
+          <div class="engine-badges-row">
+            <span class="brand-badge" id="aiStatusBadge" style="cursor: pointer;" title="Click to view Gemini API settings">
+              <i class="fa-solid fa-circle" style="font-size: 7px; color: #4ade80; margin-right: 5px;"></i>Gemini 3.6
+            </span>
+            <span class="brand-badge luma-badge" id="lumaStatusBadge" style="cursor: pointer;" title="Click to view Luma API settings">
+              <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 8px; color: #c084fc; margin-right: 5px;"></i>Luma Ready
+            </span>
+          </div>
+        </div>
+
+        <!-- Engine Switcher in Header -->
+        <div class="engine-switcher" id="engineSwitcher">
+          <button class="engine-tab active" id="engineGeminiBtn" data-mode="gemini" title="Gemini Spatial Intelligence & 3D Engineering">
+            <i class="fa-solid fa-brain"></i>
+            <span>Spatial AI (Gemini)</span>
+          </button>
+          <button class="engine-tab" id="engineLumaBtn" data-mode="luma" title="Luma Generative 3D Visuals & Video Studio">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Luma 3D Studio</span>
+          </button>
+        </div>
+
+        <div class="top-nav-right">
+          <a href="Admin.html" class="btn-dashboard">
+            <i class="fa-solid fa-gauge-high"></i>
+            <span>Admin Dashboard</span>
+          </a>
+          <div class="user-avatar" title="Creator Profile">
+            <img src="https://api.dicebear.com/7.x/identicon/svg?seed=atherCreator" alt="User" />
+          </div>
+        </div>
+      </header>
+
+      <!-- Chat & Content Viewport -->
+      <div class="chat-viewport" id="chatContainer">
+        <!-- Welcome Hero View -->
+        <div class="welcome-view" id="welcomeBox">
+          <div class="welcome-header">
+            <h1 class="welcome-title">Hello, <span class="gradient-text" id="welcomeGreetingSubject">Creator</span></h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">How can Ather3D assist your 3D models and spatial environments today?</p>
+          </div>
+
+          <!-- Suggestion Cards Grid -->
+          <div class="cards-grid" id="cardsGrid">
+            <button class="card" data-prompt="Generate real-time PBR shaders and texture maps for AR models">
+              <span class="card-text">Generate real-time PBR shaders and texture maps for AR models</span>
+              <div class="card-icon-wrapper">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+              </div>
+            </button>
+
+            <button class="card" data-prompt="Optimize 3D polygon budget & LOD for WebXR performance">
+              <span class="card-text">Optimize 3D polygon budget & LOD for WebXR performance</span>
+              <div class="card-icon-wrapper">
+                <i class="fa-solid fa-gauge-high"></i>
+              </div>
+            </button>
+
+            <button class="card" data-prompt="Construct spatial VR environment lighting and skybox scenes">
+              <span class="card-text">Construct spatial VR environment lighting and skybox scenes</span>
+              <div class="card-icon-wrapper">
+                <i class="fa-solid fa-sun"></i>
+              </div>
+            </button>
+
+            <button class="card" data-prompt="Inspect GLTF/GLB model hierarchy and spatial collider mesh">
+              <span class="card-text">Inspect GLTF/GLB model hierarchy and spatial collider mesh</span>
+              <div class="card-icon-wrapper">
+                <i class="fa-solid fa-layer-group"></i>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Messages Stream -->
+        <div class="messages-list" id="messagesList"></div>
+      </div>
+
+      <!-- Bottom Chat Input Area -->
+      <div class="input-section">
+        <!-- Luma Generative Controls Bar -->
+        <div class="luma-controls-bar" id="lumaControlsBar" style="display: none;">
+          <div class="luma-control-group">
+            <span class="control-label"><i class="fa-solid fa-layer-group"></i> Model:</span>
+            <select id="lumaModelSelect" class="luma-select">
+              <option value="uni-1" selected>uni-1 (Generative 3D Visual & Concept)</option>
+              <option value="uni-1-max">uni-1-max (Ultra Detail 3D Asset)</option>
+              <option value="ray-3.2">ray-3.2 (Spatial Cinematic Video)</option>
+            </select>
+          </div>
+          <div class="luma-control-group">
+            <span class="control-label"><i class="fa-solid fa-expand"></i> Ratio:</span>
+            <div class="ratio-buttons" id="ratioButtons">
+              <button type="button" class="ratio-btn active" data-ratio="16:9">16:9</button>
+              <button type="button" class="ratio-btn" data-ratio="1:1">1:1</button>
+              <button type="button" class="ratio-btn" data-ratio="9:16">9:16</button>
+              <button type="button" class="ratio-btn" data-ratio="4:3">4:3</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-card">
+          <textarea
+            id="promptInput"
+            rows="1"
+            placeholder="Ask Ather3D about 3D models, shaders, or environments..."
+            autofocus
+          ></textarea>
+          <div class="input-toolbar">
+            <div class="tool-left">
+              <button class="tool-btn" id="modeSwitchBtn" title="Toggle AI Engine (Gemini / Luma)" aria-label="Toggle AI Engine">
+                <i class="fa-solid fa-sliders"></i>
+                <span class="active-engine-chip" id="activeEngineChip">Gemini</span>
+              </button>
+              <button class="tool-btn" title="Attach file or 3D asset" aria-label="Attach file">
+                <i class="fa-solid fa-paperclip"></i>
+              </button>
+              <button class="tool-btn" title="Voice input" aria-label="Voice input">
+                <i class="fa-solid fa-microphone"></i>
+              </button>
+            </div>
+            <div class="tool-right">
+              <button class="send-action-btn" id="sendBtn" title="Send message" disabled aria-label="Send message">
+                <i class="fa-solid fa-arrow-up"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="input-disclaimer" id="inputDisclaimer">
+          Ather3D AI helps optimize 3D assets. Please verify polygon counts, transforms, and spatial scale.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Settings & Dual-AI API Modal -->
+  <div class="modal-backdrop" id="settingsModal" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-head">
+        <div class="modal-title">
+          <i class="fa-solid fa-gear modal-icon"></i>
+          <span>Workspace AI Settings</span>
+        </div>
+        <button class="modal-close" id="closeSettingsBtn" aria-label="Close Settings">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-content-body">
+        <!-- Settings Tabs -->
+        <div class="modal-tabs">
+          <button class="modal-tab active" id="tabGeminiBtn" data-tab="gemini">
+            <i class="fa-solid fa-brain"></i> Google Gemini
+          </button>
+          <button class="modal-tab" id="tabLumaBtn" data-tab="luma">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Luma AI Studio
+          </button>
+        </div>
+
+        <!-- Gemini Section -->
+        <div class="modal-tab-pane active" id="geminiTabPane">
+          <div class="setting-item">
+            <label for="apiKeyInput" class="setting-title">Gemini AI API Key</label>
+            <div class="input-group-row">
+              <input type="password" id="apiKeyInput" class="custom-input" placeholder="Enter Gemini API key..." />
+              <button class="btn-input-action" id="toggleKeyVisibility" title="Toggle visibility">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <span class="setting-description">Spatial reasoning and 3D programming engine loaded from backend .env.</span>
+          </div>
+
+          <div class="setting-item">
+            <label for="modelSelect" class="setting-title">Active Gemini Model</label>
+            <select id="modelSelect" class="custom-input custom-select">
+              <option value="gemini-3.6-flash" selected>gemini-3.6-flash (Recommended & Ultra Fast)</option>
+              <option value="gemini-flash-latest">gemini-flash-latest</option>
+              <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+            </select>
+            <span class="setting-description">Gemini 3.6 Flash provides low latency and deep spatial reasoning.</span>
+          </div>
+
+          <div class="setting-item">
+            <label class="setting-title">Status & Connectivity</label>
+            <div class="connection-status-box" id="modalConnectionStatus">
+              <i class="fa-solid fa-circle-check" style="color: #4ade80;"></i>
+              <span>Google Gemini API: Connected & Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Luma AI Section -->
+        <div class="modal-tab-pane" id="lumaTabPane" style="display: none;">
+          <div class="setting-item">
+            <label for="lumaApiKeyInput" class="setting-title">Luma AI API Key</label>
+            <div class="input-group-row">
+              <input type="password" id="lumaApiKeyInput" class="custom-input" placeholder="Enter Luma API key (luma-api-...)" />
+              <button class="btn-input-action" id="toggleLumaKeyVisibility" title="Toggle visibility">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+            <span class="setting-description">Loaded from backend .env (<code>LUMA_API_KEY</code>). Powers 3D visuals, textures, and spatial video generation.</span>
+          </div>
+
+          <div class="setting-item">
+            <label for="modalLumaModelSelect" class="setting-title">Default Luma Model</label>
+            <select id="modalLumaModelSelect" class="custom-input custom-select">
+              <option value="uni-1" selected>uni-1 (Generative 3D Visual & Concept)</option>
+              <option value="uni-1-max">uni-1-max (Ultra-detailed 3D Generation)</option>
+              <option value="ray-3.2">ray-3.2 (Spatial Cinematic Video & Flythrough)</option>
+            </select>
+            <span class="setting-description">Luma Agents & Generations API engine used for spatial asset synthesis.</span>
+          </div>
+
+          <div class="setting-item">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="setting-title">Luma API Connectivity</label>
+              <button type="button" id="testLumaBtn" class="btn-test-conn">
+                <i class="fa-solid fa-rotate-right"></i> Test Connection
+              </button>
+            </div>
+            <div class="connection-status-box" id="modalLumaConnectionStatus">
+              <i class="fa-solid fa-circle-check" style="color: #c084fc;"></i>
+              <span>Luma AI API: Connected & Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer-actions">
+        <button class="btn-cancel" id="cancelSettingsBtn">Close</button>
+        <button class="btn-save" id="saveSettingsBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="Workspace.js"></script>
+</body>
+</html>
