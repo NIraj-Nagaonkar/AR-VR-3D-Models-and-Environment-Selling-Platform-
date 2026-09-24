@@ -1052,7 +1052,7 @@ Your responsibilities:
     }
 
     if (aiStatusBadge) {
-      aiStatusBadge.innerHTML = `<i class="fa-solid fa-circle" style="font-size: 7px; color: #4ade80; margin-right: 5px;"></i>Gemini 3.6`;
+      aiStatusBadge.innerHTML = `<i class="fa-solid fa-circle" style="font-size: 7px; color: #4ade80; margin-right: 5px;"></i>Gemini Flash`;
     }
 
     if (lumaStatusBadge) {
@@ -1062,10 +1062,685 @@ Your responsibilities:
     closeSettingsModal();
   });
 
+  // ==========================================================================
+  // Visual Studio Controller: Image Generation & 3D Vision Analysis
+  // ==========================================================================
+  function initVisualStudio() {
+    // --- Navigation Elements ---
+    const tabViewChat = document.getElementById('tabViewChat');
+    const tabViewStudio = document.getElementById('tabViewStudio');
+    const viewChatPane = document.getElementById('viewChatPane');
+    const viewStudioPane = document.getElementById('viewStudioPane');
+    const sideNavChatBtn = document.getElementById('sideNavChatBtn');
+    const sideNavGenerateBtn = document.getElementById('sideNavGenerateBtn');
+    const sideNavAnalyzeBtn = document.getElementById('sideNavAnalyzeBtn');
+    const btnQuickSwitchStudio = document.getElementById('btnQuickSwitchStudio');
+
+    // --- Studio Sub-Tab Elements ---
+    const studioTabGenBtn = document.getElementById('studioTabGenBtn');
+    const studioTabAnalyzeBtn = document.getElementById('studioTabAnalyzeBtn');
+    const studioGenView = document.getElementById('studioGenView');
+    const studioAnalyzeView = document.getElementById('studioAnalyzeView');
+    const studioActiveEngineBadge = document.getElementById('studioActiveEngineBadge');
+
+    // --- Generator Elements ---
+    const genPromptInput = document.getElementById('genPromptInput');
+    const genNegativeInput = document.getElementById('genNegativeInput');
+    const genEngineSelect = document.getElementById('genEngineSelect');
+    const btnRunGenerate = document.getElementById('btnRunGenerate');
+    const btnRunGenerateText = document.getElementById('btnRunGenerateText');
+    const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+    const canvasLoading = document.getElementById('canvasLoading');
+    const canvasLoadingLabel = document.getElementById('canvasLoadingLabel');
+    const canvasResult = document.getElementById('canvasResult');
+    const generatedImageEl = document.getElementById('generatedImageEl');
+    const canvasActions = document.getElementById('canvasActions');
+    const btnInspectGenerated = document.getElementById('btnInspectGenerated');
+    const btnDownloadGenerated = document.getElementById('btnDownloadGenerated');
+    const btnCopyGenPrompt = document.getElementById('btnCopyGenPrompt');
+    const shelfCount = document.getElementById('shelfCount');
+    const shelfThumbnails = document.getElementById('shelfThumbnails');
+
+    // --- Vision Analysis Elements ---
+    const analyzeDropZone = document.getElementById('analyzeDropZone');
+    const analyzeFileInput = document.getElementById('analyzeFileInput');
+    const dropZoneEmpty = document.getElementById('dropZoneEmpty');
+    const dropZoneLoaded = document.getElementById('dropZoneLoaded');
+    const btnBrowseFile = document.getElementById('btnBrowseFile');
+    const btnUseLastGenerated = document.getElementById('btnUseLastGenerated');
+    const analyzeThumbEl = document.getElementById('analyzeThumbEl');
+    const analyzeFilename = document.getElementById('analyzeFilename');
+    const analyzeDimensions = document.getElementById('analyzeDimensions');
+    const btnRemoveAnalyzedImage = document.getElementById('btnRemoveAnalyzedImage');
+    const analyzeCustomPrompt = document.getElementById('analyzeCustomPrompt');
+    const btnRunAnalysis = document.getElementById('btnRunAnalysis');
+    const btnRunAnalysisText = document.getElementById('btnRunAnalysisText');
+    const reportPlaceholder = document.getElementById('reportPlaceholder');
+    const reportLoading = document.getElementById('reportLoading');
+    const reportOutput = document.getElementById('reportOutput');
+    const reportActions = document.getElementById('reportActions');
+    const reportTaskBadge = document.getElementById('reportTaskBadge');
+    const reportModelBadge = document.getElementById('reportModelBadge');
+    const reportTimeBadge = document.getElementById('reportTimeBadge');
+    const reportMarkdownBody = document.getElementById('reportMarkdownBody');
+    const btnCopyAnalysisReport = document.getElementById('btnCopyAnalysisReport');
+    const btnDiscussInChat = document.getElementById('btnDiscussInChat');
+
+    // --- Studio State ---
+    let selectedStylePreset = 'pbr';
+    let selectedGenRatio = '16:9';
+    let lastGeneratedData = null; // { url, prompt, base64 }
+    let currentInspectionImage = null; // { base64, mimeType, filename, dimensions }
+    let selectedAnalysisTask = 'topology';
+    let lastAnalysisMarkdown = '';
+
+    const STYLE_PRESETS = {
+      pbr: "3D model render, PBR textures, 8k resolution, photorealistic, cinematic studio lighting, octane render, Unreal Engine 5, raytraced reflections",
+      cyberpunk: "cyberpunk 3D asset, neon volumetric lighting, high tech hard-surface mechanical detailing, futuristic sci-fi aesthetic, 8k render",
+      isometric: "isometric 3D diorama, low poly stylized 3D model, vibrant colorful lighting, clean edges, Blender Cycles render",
+      texture: "seamless tiling PBR texture map, high detail surface material, albedo and normal depth, orthogonal flat studio lighting, 4k texture",
+      gameprop: "game ready 3D prop asset, clean quad topology, neutral backdrop, PBR material maps, stylized realism",
+      archviz: "photorealistic architectural interior, modern spatial design, natural daylighting, luxury materials, v-ray render"
+    };
+
+    const RATIO_DIMS = {
+      '16:9': { width: 1280, height: 720 },
+      '1:1': { width: 1024, height: 1024 },
+      '9:16': { width: 720, height: 1280 },
+      '4:3': { width: 1024, height: 768 }
+    };
+
+    const TASK_TITLES = {
+      topology: '<i class="fa-solid fa-draw-polygon"></i> Topology Audit',
+      materials: '<i class="fa-solid fa-gem"></i> PBR Material Breakdown',
+      lighting: '<i class="fa-solid fa-sun"></i> Lighting & Atmosphere',
+      prompt_extract: '<i class="fa-solid fa-wand-magic-sparkles"></i> Prompt Extraction',
+      game_engine: '<i class="fa-solid fa-cubes-stacked"></i> Engine Viability',
+      general: '<i class="fa-solid fa-circle-question"></i> Custom 3D Audit'
+    };
+
+    // --- Switch Workspace View (Chat vs Studio) ---
+    function switchWorkspaceView(view) {
+      if (view === 'chat') {
+        viewChatPane.style.display = 'flex';
+        viewStudioPane.style.display = 'none';
+        tabViewChat?.classList.add('active');
+        tabViewStudio?.classList.remove('active');
+        sideNavChatBtn?.classList.add('active');
+        sideNavGenerateBtn?.classList.remove('active');
+        sideNavAnalyzeBtn?.classList.remove('active');
+      } else {
+        viewChatPane.style.display = 'none';
+        viewStudioPane.style.display = 'flex';
+        tabViewChat?.classList.remove('active');
+        tabViewStudio?.classList.add('active');
+        sideNavChatBtn?.classList.remove('active');
+      }
+    }
+
+    // --- Switch Studio Sub-Tabs (Generate vs Analyze) ---
+    function switchStudioSubTab(tab) {
+      if (tab === 'generate') {
+        studioTabGenBtn?.classList.add('active');
+        studioTabAnalyzeBtn?.classList.remove('active');
+        studioGenView.style.display = 'flex';
+        studioAnalyzeView.style.display = 'none';
+        sideNavGenerateBtn?.classList.add('active');
+        sideNavAnalyzeBtn?.classList.remove('active');
+        if (studioActiveEngineBadge) {
+          studioActiveEngineBadge.innerHTML = '<i class="fa-solid fa-bolt" style="color: #c084fc;"></i> Flux 3D Realism + Luma Engine';
+        }
+      } else {
+        studioTabGenBtn?.classList.remove('active');
+        studioTabAnalyzeBtn?.classList.add('active');
+        studioGenView.style.display = 'none';
+        studioAnalyzeView.style.display = 'flex';
+        sideNavGenerateBtn?.classList.remove('active');
+        sideNavAnalyzeBtn?.classList.add('active');
+        if (studioActiveEngineBadge) {
+          studioActiveEngineBadge.innerHTML = '<i class="fa-solid fa-microscope" style="color: #4ade80;"></i> Gemini Spatial Vision Intelligence';
+        }
+      }
+    }
+
+    // Header Module Switcher Listeners
+    tabViewChat?.addEventListener('click', () => switchWorkspaceView('chat'));
+    tabViewStudio?.addEventListener('click', () => {
+      switchWorkspaceView('studio');
+      switchStudioSubTab('generate');
+    });
+
+    // Sidebar Modes Listeners
+    sideNavChatBtn?.addEventListener('click', () => switchWorkspaceView('chat'));
+    sideNavGenerateBtn?.addEventListener('click', () => {
+      switchWorkspaceView('studio');
+      switchStudioSubTab('generate');
+    });
+    sideNavAnalyzeBtn?.addEventListener('click', () => {
+      switchWorkspaceView('studio');
+      switchStudioSubTab('analyze');
+    });
+    btnQuickSwitchStudio?.addEventListener('click', () => {
+      switchWorkspaceView('studio');
+      switchStudioSubTab('generate');
+    });
+
+    // Studio Sub-Tabs Listeners
+    studioTabGenBtn?.addEventListener('click', () => switchStudioSubTab('generate'));
+    studioTabAnalyzeBtn?.addEventListener('click', () => switchStudioSubTab('analyze'));
+
+    // --- Inspiration Chips in Generator ---
+    document.querySelectorAll('.gen-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (genPromptInput) {
+          genPromptInput.value = chip.getAttribute('data-prompt') || '';
+          genPromptInput.focus();
+        }
+      });
+    });
+
+    // --- Style Preset Buttons ---
+    document.querySelectorAll('.style-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.style-preset-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedStylePreset = btn.getAttribute('data-preset') || 'pbr';
+      });
+    });
+
+    // --- Aspect Ratio Chips in Generator ---
+    document.querySelectorAll('#genRatioChips .ratio-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('#genRatioChips .ratio-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        selectedGenRatio = chip.getAttribute('data-ratio') || '16:9';
+      });
+    });
+
+    // --- Recent Creations Storage ---
+    function getStoredCreations() {
+      try {
+        const stored = localStorage.getItem('ather_recent_creations');
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveStoredCreations(list) {
+      try {
+        localStorage.setItem('ather_recent_creations', JSON.stringify(list.slice(0, 15)));
+      } catch (e) {}
+    }
+
+    function renderCreationsShelf() {
+      const creations = getStoredCreations();
+      if (shelfCount) shelfCount.textContent = `${creations.length} asset${creations.length === 1 ? '' : 's'}`;
+      if (!shelfThumbnails) return;
+
+      shelfThumbnails.innerHTML = '';
+      if (creations.length === 0) {
+        shelfThumbnails.innerHTML = '<span style="font-size: 11px; color: var(--text-muted); align-self: center;">No creations saved yet</span>';
+        return;
+      }
+
+      creations.forEach((item, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = `shelf-thumb-item ${idx === 0 ? 'active' : ''}`;
+        thumb.title = item.prompt || 'Generated Asset';
+        thumb.innerHTML = `<img src="${item.url}" alt="Thumbnail" />`;
+        thumb.addEventListener('click', () => {
+          document.querySelectorAll('.shelf-thumb-item').forEach(t => t.classList.remove('active'));
+          thumb.classList.add('active');
+          displayGeneratedResult(item.url, item.prompt);
+        });
+        shelfThumbnails.appendChild(thumb);
+      });
+    }
+
+    function displayGeneratedResult(url, prompt) {
+      canvasPlaceholder.style.display = 'none';
+      canvasLoading.style.display = 'none';
+      canvasResult.style.display = 'flex';
+      canvasActions.style.display = 'flex';
+      generatedImageEl.src = url;
+      lastGeneratedData = { url, prompt };
+
+      if (btnUseLastGenerated) {
+        btnUseLastGenerated.style.display = 'inline-flex';
+      }
+    }
+
+    // --- Image Generator Action ---
+    btnRunGenerate?.addEventListener('click', async () => {
+      const userPrompt = genPromptInput?.value?.trim();
+      if (!userPrompt) {
+        alert('Please enter a description for the 3D model or texture you want to generate.');
+        genPromptInput?.focus();
+        return;
+      }
+
+      const engine = genEngineSelect?.value || 'flux';
+      const presetAddon = STYLE_PRESETS[selectedStylePreset] || '';
+      const fullPrompt = `${userPrompt}, ${presetAddon}`.trim();
+      const dims = RATIO_DIMS[selectedGenRatio] || { width: 1280, height: 720 };
+
+      // Set Loading State
+      canvasPlaceholder.style.display = 'none';
+      canvasResult.style.display = 'none';
+      canvasActions.style.display = 'none';
+      canvasLoading.style.display = 'flex';
+      btnRunGenerate.disabled = true;
+      btnRunGenerateText.textContent = 'Generating 3D Asset...';
+
+      if (canvasLoadingLabel) {
+        canvasLoadingLabel.textContent = engine === 'luma' 
+          ? 'Rendering 3D visual via Luma Dream Machine...' 
+          : 'Synthesizing PBR textures & spatial lighting with Flux...';
+      }
+
+      try {
+        let finalUrl = '';
+
+        if (engine === 'luma') {
+          // Request via Luma Generations Backend API
+          const response = await fetch('/api/luma/generations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              prompt: fullPrompt,
+              model: 'uni-1',
+              aspect_ratio: selectedGenRatio
+            })
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Luma API generation failed');
+          }
+
+          const genId = data.data?.id;
+          if (!genId) throw new Error('No generation ID returned from Luma');
+
+          // Poll for completion (up to 45s)
+          let polls = 0;
+          while (polls < 30) {
+            await new Promise(r => setTimeout(r, 2000));
+            polls++;
+
+            const pollRes = await fetch(`/api/luma/generations/${genId}`);
+            const pollData = await pollRes.json();
+            const state = pollData.data?.state;
+
+            if (state === 'completed') {
+              finalUrl = pollData.data?.normalizedAssetUrl;
+              break;
+            } else if (state === 'failed') {
+              throw new Error(pollData.data?.failure_reason || 'Luma generation failed');
+            }
+          }
+
+          if (!finalUrl) {
+            throw new Error('Generation took longer than expected. Please retry.');
+          }
+
+        } else {
+          // Ultra-Fast High-Res Flux 3D Realism
+          const seed = Math.floor(Math.random() * 1000000);
+          const encodedPrompt = encodeURIComponent(fullPrompt);
+          finalUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dims.width}&height=${dims.height}&nologo=true&enhance=true&seed=${seed}`;
+
+          // Preload to ensure smooth display
+          await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => reject(new Error('Failed to load generated visual'));
+            img.src = finalUrl;
+          });
+        }
+
+        // Display Result
+        displayGeneratedResult(finalUrl, userPrompt);
+
+        // Save to creations history
+        const creations = getStoredCreations();
+        creations.unshift({
+          url: finalUrl,
+          prompt: userPrompt,
+          timestamp: new Date().toISOString()
+        });
+        saveStoredCreations(creations);
+        renderCreationsShelf();
+
+      } catch (err) {
+        console.error('Generation Error:', err);
+        canvasLoading.style.display = 'none';
+        canvasPlaceholder.style.display = 'block';
+        alert(`Generation Error: ${err.message}`);
+      } finally {
+        btnRunGenerate.disabled = false;
+        btnRunGenerateText.textContent = 'Generate 3D Asset';
+      }
+    });
+
+    // Copy Prompt Button
+    btnCopyGenPrompt?.addEventListener('click', () => {
+      if (lastGeneratedData?.prompt) {
+        navigator.clipboard.writeText(lastGeneratedData.prompt);
+        btnCopyGenPrompt.innerHTML = '<i class="fa-solid fa-check" style="color: #4ade80;"></i>';
+        setTimeout(() => {
+          btnCopyGenPrompt.innerHTML = '<i class="fa-regular fa-copy"></i>';
+        }, 1500);
+      }
+    });
+
+    // Download Generated Asset Button
+    btnDownloadGenerated?.addEventListener('click', async () => {
+      if (!lastGeneratedData?.url) return;
+      try {
+        const link = document.createElement('a');
+        link.href = lastGeneratedData.url;
+        link.download = `Ather3D_Asset_${Date.now()}.png`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        window.open(lastGeneratedData.url, '_blank');
+      }
+    });
+
+    // Send Generated Image to Vision Inspector
+    btnInspectGenerated?.addEventListener('click', async () => {
+      if (!lastGeneratedData?.url) return;
+
+      // Switch to Analysis Tab
+      switchStudioSubTab('analyze');
+
+      // Convert URL to Base64 via backend proxy to eliminate CORS
+      try {
+        const proxyRes = await fetch('/api/chat/proxy-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: lastGeneratedData.url })
+        });
+        const proxyData = await proxyRes.json();
+
+        if (proxyData.success && proxyData.dataUrl) {
+          loadImageForInspection(proxyData.dataUrl, 'generated_3d_asset.png');
+        } else {
+          loadImageForInspection(lastGeneratedData.url, 'generated_3d_asset.png');
+        }
+      } catch (e) {
+        loadImageForInspection(lastGeneratedData.url, 'generated_3d_asset.png');
+      }
+    });
+
+    // --- Vision 3D Inspector Logic ---
+
+    // Select Task Cards
+    document.querySelectorAll('.task-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        selectedAnalysisTask = card.getAttribute('data-task') || 'topology';
+      });
+    });
+
+    // Helper: Load Image into Dropzone State
+    function loadImageForInspection(dataUrl, filename = 'asset.png') {
+      currentInspectionImage = {
+        dataUrl,
+        filename,
+        base64: dataUrl
+      };
+
+      if (analyzeThumbEl) analyzeThumbEl.src = dataUrl;
+      if (analyzeFilename) analyzeFilename.textContent = filename;
+
+      // Calculate dimensions
+      const img = new Image();
+      img.onload = () => {
+        if (analyzeDimensions) {
+          analyzeDimensions.textContent = `${img.width} × ${img.height} px • Ready for Audit`;
+        }
+      };
+      img.src = dataUrl;
+
+      dropZoneEmpty.style.display = 'none';
+      dropZoneLoaded.style.display = 'flex';
+      analyzeDropZone?.classList.remove('dragover');
+    }
+
+    // Remove Loaded Image
+    btnRemoveAnalyzedImage?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentInspectionImage = null;
+      dropZoneLoaded.style.display = 'none';
+      dropZoneEmpty.style.display = 'flex';
+      if (analyzeFileInput) analyzeFileInput.value = '';
+    });
+
+    // File Browse
+    btnBrowseFile?.addEventListener('click', () => {
+      analyzeFileInput?.click();
+    });
+
+    analyzeFileInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        loadImageForInspection(event.target.result, file.name);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Use Last Generated Image in Analysis Dropzone
+    btnUseLastGenerated?.addEventListener('click', async () => {
+      if (!lastGeneratedData?.url) return;
+      try {
+        const proxyRes = await fetch('/api/chat/proxy-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: lastGeneratedData.url })
+        });
+        const proxyData = await proxyRes.json();
+        if (proxyData.success && proxyData.dataUrl) {
+          loadImageForInspection(proxyData.dataUrl, 'last_generated_asset.png');
+        } else {
+          loadImageForInspection(lastGeneratedData.url, 'last_generated_asset.png');
+        }
+      } catch (err) {
+        loadImageForInspection(lastGeneratedData.url, 'last_generated_asset.png');
+      }
+    });
+
+    // Drag and Drop Events
+    analyzeDropZone?.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      analyzeDropZone.classList.add('dragover');
+    });
+
+    analyzeDropZone?.addEventListener('dragleave', () => {
+      analyzeDropZone.classList.remove('dragover');
+    });
+
+    analyzeDropZone?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      analyzeDropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          loadImageForInspection(ev.target.result, file.name);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Window Paste Listener for Ctrl+V Image
+    window.addEventListener('paste', (e) => {
+      if (viewStudioPane.style.display === 'none' || studioAnalyzeView.style.display === 'none') {
+        return;
+      }
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            loadImageForInspection(ev.target.result, 'clipboard_capture.png');
+          };
+          reader.readAsDataURL(blob);
+          break;
+        }
+      }
+    });
+
+    // Markdown Formatter for Inspection Report
+    function renderMarkdownToHtml(markdownText) {
+      if (!markdownText) return '';
+      let html = escapeHtml(markdownText);
+
+      // Headers
+      html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+      html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+      html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+      // Bold & Italic
+      html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+
+      // Code blocks
+      html = html.replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>');
+      html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
+
+      // Unordered List Items
+      html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+      html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+      html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+      // Numbered List Items
+      html = html.replace(/^\d+\.\s+(.*$)/gim, '<li>$1</li>');
+
+      // Horizontal Rules
+      html = html.replace(/^---$/gim, '<hr />');
+
+      // Line breaks
+      html = html.replace(/\n\n/gim, '<p></p>');
+      html = html.replace(/\n/gim, '<br />');
+
+      return html;
+    }
+
+    // --- Run Vision Analysis ---
+    btnRunAnalysis?.addEventListener('click', async () => {
+      if (!currentInspectionImage?.dataUrl) {
+        alert('Please upload, drag & drop, or paste a 3D model render or texture to inspect.');
+        return;
+      }
+
+      const customPrompt = analyzeCustomPrompt?.value?.trim() || '';
+
+      // Set Loading State
+      reportPlaceholder.style.display = 'none';
+      reportOutput.style.display = 'none';
+      reportActions.style.display = 'none';
+      reportLoading.style.display = 'flex';
+      btnRunAnalysis.disabled = true;
+      btnRunAnalysisText.textContent = 'Auditing Asset...';
+
+      try {
+        const response = await fetch('/api/chat/analyze-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: currentInspectionImage.dataUrl,
+            task: selectedAnalysisTask,
+            prompt: customPrompt
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || data.error?.message || 'Vision analysis failed');
+        }
+
+        lastAnalysisMarkdown = data.analysis || '';
+
+        // Update Badges
+        if (reportTaskBadge) {
+          reportTaskBadge.innerHTML = TASK_TITLES[selectedAnalysisTask] || '<i class="fa-solid fa-microscope"></i> 3D Audit';
+        }
+        if (reportModelBadge) {
+          reportModelBadge.innerHTML = `<i class="fa-solid fa-microchip"></i> ${data.modelUsed || 'gemini-flash-latest'}`;
+        }
+        if (reportTimeBadge) {
+          reportTimeBadge.innerHTML = `<i class="fa-regular fa-clock"></i> ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        // Render Markdown Body
+        if (reportMarkdownBody) {
+          reportMarkdownBody.innerHTML = renderMarkdownToHtml(lastAnalysisMarkdown);
+        }
+
+        // Show Output
+        reportLoading.style.display = 'none';
+        reportOutput.style.display = 'flex';
+        reportActions.style.display = 'flex';
+
+      } catch (err) {
+        console.error('Vision Analysis Error:', err);
+        reportLoading.style.display = 'none';
+        reportPlaceholder.style.display = 'block';
+        alert(`Vision Analysis Error: ${err.message}`);
+      } finally {
+        btnRunAnalysis.disabled = false;
+        btnRunAnalysisText.textContent = 'Run 3D Vision Analysis';
+      }
+    });
+
+    // Copy Analysis Report (Markdown)
+    btnCopyAnalysisReport?.addEventListener('click', () => {
+      if (lastAnalysisMarkdown) {
+        navigator.clipboard.writeText(lastAnalysisMarkdown);
+        btnCopyAnalysisReport.innerHTML = '<i class="fa-solid fa-check" style="color: #4ade80;"></i> <span>Copied!</span>';
+        setTimeout(() => {
+          btnCopyAnalysisReport.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copy Report</span>';
+        }, 1800);
+      }
+    });
+
+    // Discuss in Spatial Chat
+    btnDiscussInChat?.addEventListener('click', () => {
+      if (!lastAnalysisMarkdown) return;
+
+      // Switch to Chat View
+      switchWorkspaceView('chat');
+
+      // Pre-fill prompt with audit context
+      if (promptInput) {
+        const shortSummary = lastAnalysisMarkdown.split('\n').slice(0, 8).join(' ');
+        promptInput.value = `I just ran a 3D Vision Audit on my asset. Key findings: "${shortSummary.substring(0, 180)}..."\n\nCan you give me actionable code / Blender steps to implement these optimizations?`;
+        promptInput.focus();
+        promptInput.dispatchEvent(new Event('input'));
+      }
+    });
+
+    // Initial render of creations shelf
+    renderCreationsShelf();
+  }
+
   // Initial Setup
   if (lumaModelSelect) {
     lumaModelSelect.value = getActiveLumaModel();
   }
   setEngine('gemini');
   renderChatHistoryList();
+  initVisualStudio();
 });

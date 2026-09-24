@@ -40,8 +40,10 @@ The Express backend seamlessly serves both the REST API and the static frontend 
 - **Custom 3D Request Pipeline**: Customers can request bespoke 3D environments with file uploads (blueprints/references via Multer).
 - **Admin Dashboard**: Real-time management of requests with status transitions (`pending` ➔ `accepted` ➔ `rejected` ➔ `completed`).
 - **Ather3D Workspace Studio**:
-  - Interactive Gemini Spatial AI chat with multi-session history.
-  - Luma AI integration for text-to-3D asset and video generation with real-time status polling.
+  - **Spatial AI Chat**: Interactive Gemini 3D engineering assistant with multi-session history and multi-model failover.
+  - **Visual Studio - Image & Texture Generator**: Create 3D concept renders, PBR texture maps, and isometric models using Flux & Luma with aspect ratios and style presets.
+  - **Visual Studio - 3D Vision Inspector**: Drag-and-drop or paste renders to audit mesh topology, polygon budget, PBR texture maps (Albedo, Normal, Roughness, Metalness), and lighting setup via Gemini Vision.
+  - **Seamless Workflow**: Send any generated image directly to the Vision Inspector with one click, or export audit reports to Spatial Chat.
 - **Clean Routing**: Direct friendly URLs (`/login`, `/signup`, `/admin`, `/workspace`, `/customer`).
 
 ---

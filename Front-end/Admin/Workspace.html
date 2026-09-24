@@ -27,6 +27,24 @@
         </button>
       </div>
 
+      <!-- Navigation Modes -->
+      <div class="sidebar-modes">
+        <button class="sidebar-mode-btn active" id="sideNavChatBtn" data-view="chat" title="Spatial AI Engineering Assistant">
+          <i class="fa-solid fa-comments"></i>
+          <span class="btn-text">Spatial AI Chat</span>
+        </button>
+        <button class="sidebar-mode-btn" id="sideNavGenerateBtn" data-view="generate" title="3D Asset & Concept Generation Studio">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span class="btn-text">Image Generator</span>
+          <span class="sidebar-mode-tag">Studio</span>
+        </button>
+        <button class="sidebar-mode-btn" id="sideNavAnalyzeBtn" data-view="analyze" title="3D Mesh Topology & PBR Vision Inspector">
+          <i class="fa-solid fa-microscope"></i>
+          <span class="btn-text">Vision 3D Inspector</span>
+          <span class="sidebar-mode-tag">Vision</span>
+        </button>
+      </div>
+
       <!-- Chat History -->
       <div class="recent-section">
         <div class="section-label">Chat History</div>
@@ -67,7 +85,7 @@
           </a>
           <div class="engine-badges-row">
             <span class="brand-badge" id="aiStatusBadge" style="cursor: pointer;" title="Click to view Gemini API settings">
-              <i class="fa-solid fa-circle" style="font-size: 7px; color: #4ade80; margin-right: 5px;"></i>Gemini 3.6
+              <i class="fa-solid fa-circle" style="font-size: 7px; color: #4ade80; margin-right: 5px;"></i>Gemini Flash
             </span>
             <span class="brand-badge luma-badge" id="lumaStatusBadge" style="cursor: pointer;" title="Click to view Luma API settings">
               <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 8px; color: #c084fc; margin-right: 5px;"></i>Luma Ready
@@ -75,15 +93,16 @@
           </div>
         </div>
 
-        <!-- Engine Switcher in Header -->
-        <div class="engine-switcher" id="engineSwitcher">
-          <button class="engine-tab active" id="engineGeminiBtn" data-mode="gemini" title="Gemini Spatial Intelligence & 3D Engineering">
-            <i class="fa-solid fa-brain"></i>
-            <span>Spatial AI (Gemini)</span>
+        <!-- Primary Module Switcher in Header -->
+        <div class="module-switcher" id="moduleSwitcher">
+          <button class="module-tab active" id="tabViewChat" data-view="chat" title="Interactive Spatial AI & 3D Assistant">
+            <i class="fa-solid fa-comments"></i>
+            <span>Spatial Chat</span>
           </button>
-          <button class="engine-tab" id="engineLumaBtn" data-mode="luma" title="Luma Generative 3D Visuals & Video Studio">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Luma 3D Studio</span>
+          <button class="module-tab" id="tabViewStudio" data-view="studio" title="Visual Studio for Image Generation & Vision Analysis">
+            <i class="fa-solid fa-palette"></i>
+            <span>Visual Studio</span>
+            <span class="module-tag">Image & Vision</span>
           </button>
         </div>
 
@@ -98,103 +117,450 @@
         </div>
       </header>
 
-      <!-- Chat & Content Viewport -->
-      <div class="chat-viewport" id="chatContainer">
-        <!-- Welcome Hero View -->
-        <div class="welcome-view" id="welcomeBox">
-          <div class="welcome-header">
-            <h1 class="welcome-title">Hello, <span class="gradient-text" id="welcomeGreetingSubject">Creator</span></h1>
-            <p class="welcome-subtitle" id="welcomeSubtitle">How can Ather3D assist your 3D models and spatial environments today?</p>
+      <!-- VIEW PANE 1: SPATIAL CHAT -->
+      <div class="workspace-view active" id="viewChatPane">
+        <!-- Chat & Content Viewport -->
+        <div class="chat-viewport" id="chatContainer">
+          <!-- Welcome Hero View -->
+          <div class="welcome-view" id="welcomeBox">
+            <div class="welcome-header">
+              <h1 class="welcome-title">Hello, <span class="gradient-text" id="welcomeGreetingSubject">Creator</span></h1>
+              <p class="welcome-subtitle" id="welcomeSubtitle">How can Ather3D assist your 3D models and spatial environments today?</p>
+            </div>
+
+            <!-- Suggestion Cards Grid -->
+            <div class="cards-grid" id="cardsGrid">
+              <button class="card" data-prompt="Generate real-time PBR shaders and texture maps for AR models">
+                <span class="card-text">Generate real-time PBR shaders and texture maps for AR models</span>
+                <div class="card-icon-wrapper">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+              </button>
+
+              <button class="card" data-prompt="Optimize 3D polygon budget & LOD for WebXR performance">
+                <span class="card-text">Optimize 3D polygon budget & LOD for WebXR performance</span>
+                <div class="card-icon-wrapper">
+                  <i class="fa-solid fa-gauge-high"></i>
+                </div>
+              </button>
+
+              <button class="card" data-prompt="Construct spatial VR environment lighting and skybox scenes">
+                <span class="card-text">Construct spatial VR environment lighting and skybox scenes</span>
+                <div class="card-icon-wrapper">
+                  <i class="fa-solid fa-sun"></i>
+                </div>
+              </button>
+
+              <button class="card" data-prompt="Inspect GLTF/GLB model hierarchy and spatial collider mesh">
+                <span class="card-text">Inspect GLTF/GLB model hierarchy and spatial collider mesh</span>
+                <div class="card-icon-wrapper">
+                  <i class="fa-solid fa-layer-group"></i>
+                </div>
+              </button>
+            </div>
           </div>
 
-          <!-- Suggestion Cards Grid -->
-          <div class="cards-grid" id="cardsGrid">
-            <button class="card" data-prompt="Generate real-time PBR shaders and texture maps for AR models">
-              <span class="card-text">Generate real-time PBR shaders and texture maps for AR models</span>
-              <div class="card-icon-wrapper">
-                <i class="fa-solid fa-wand-magic-sparkles"></i>
-              </div>
-            </button>
-
-            <button class="card" data-prompt="Optimize 3D polygon budget & LOD for WebXR performance">
-              <span class="card-text">Optimize 3D polygon budget & LOD for WebXR performance</span>
-              <div class="card-icon-wrapper">
-                <i class="fa-solid fa-gauge-high"></i>
-              </div>
-            </button>
-
-            <button class="card" data-prompt="Construct spatial VR environment lighting and skybox scenes">
-              <span class="card-text">Construct spatial VR environment lighting and skybox scenes</span>
-              <div class="card-icon-wrapper">
-                <i class="fa-solid fa-sun"></i>
-              </div>
-            </button>
-
-            <button class="card" data-prompt="Inspect GLTF/GLB model hierarchy and spatial collider mesh">
-              <span class="card-text">Inspect GLTF/GLB model hierarchy and spatial collider mesh</span>
-              <div class="card-icon-wrapper">
-                <i class="fa-solid fa-layer-group"></i>
-              </div>
-            </button>
-          </div>
+          <!-- Messages Stream -->
+          <div class="messages-list" id="messagesList"></div>
         </div>
 
-        <!-- Messages Stream -->
-        <div class="messages-list" id="messagesList"></div>
+        <!-- Bottom Chat Input Area -->
+        <div class="input-section" id="chatInputSection">
+          <!-- Luma Generative Controls Bar -->
+          <div class="luma-controls-bar" id="lumaControlsBar" style="display: none;">
+            <div class="luma-control-group">
+              <span class="control-label"><i class="fa-solid fa-layer-group"></i> Model:</span>
+              <select id="lumaModelSelect" class="luma-select">
+                <option value="uni-1" selected>uni-1 (Generative 3D Visual & Concept)</option>
+                <option value="uni-1-max">uni-1-max (Ultra Detail 3D Asset)</option>
+                <option value="ray-3.2">ray-3.2 (Spatial Cinematic Video)</option>
+              </select>
+            </div>
+            <div class="luma-control-group">
+              <span class="control-label"><i class="fa-solid fa-expand"></i> Ratio:</span>
+              <div class="ratio-buttons" id="ratioButtons">
+                <button type="button" class="ratio-btn active" data-ratio="16:9">16:9</button>
+                <button type="button" class="ratio-btn" data-ratio="1:1">1:1</button>
+                <button type="button" class="ratio-btn" data-ratio="9:16">9:16</button>
+                <button type="button" class="ratio-btn" data-ratio="4:3">4:3</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-card">
+            <textarea
+              id="promptInput"
+              rows="1"
+              placeholder="Ask Ather3D about 3D models, shaders, or environments..."
+              autofocus
+            ></textarea>
+            <div class="input-toolbar">
+              <div class="tool-left">
+                <button class="tool-btn" id="modeSwitchBtn" title="Toggle AI Engine (Gemini / Luma)" aria-label="Toggle AI Engine">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span class="active-engine-chip" id="activeEngineChip">Gemini</span>
+                </button>
+                <button class="tool-btn" id="btnQuickSwitchStudio" title="Open Visual Studio (Image Gen & Analysis)">
+                  <i class="fa-solid fa-palette"></i>
+                  <span class="active-engine-chip" style="background: rgba(192, 132, 252, 0.2);">Studio</span>
+                </button>
+                <button class="tool-btn" title="Voice input" aria-label="Voice input">
+                  <i class="fa-solid fa-microphone"></i>
+                </button>
+              </div>
+              <div class="tool-right">
+                <button class="send-action-btn" id="sendBtn" title="Send message" disabled aria-label="Send message">
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="input-disclaimer" id="inputDisclaimer">
+            Ather3D AI helps optimize 3D assets. Please verify polygon counts, transforms, and spatial scale.
+          </div>
+        </div>
       </div>
 
-      <!-- Bottom Chat Input Area -->
-      <div class="input-section">
-        <!-- Luma Generative Controls Bar -->
-        <div class="luma-controls-bar" id="lumaControlsBar" style="display: none;">
-          <div class="luma-control-group">
-            <span class="control-label"><i class="fa-solid fa-layer-group"></i> Model:</span>
-            <select id="lumaModelSelect" class="luma-select">
-              <option value="uni-1" selected>uni-1 (Generative 3D Visual & Concept)</option>
-              <option value="uni-1-max">uni-1-max (Ultra Detail 3D Asset)</option>
-              <option value="ray-3.2">ray-3.2 (Spatial Cinematic Video)</option>
-            </select>
+      <!-- VIEW PANE 2: VISUAL STUDIO (IMAGE GENERATION & ANALYSIS) -->
+      <div class="workspace-view studio-view" id="viewStudioPane" style="display: none;">
+        <!-- Studio Sub-Navigation Bar -->
+        <div class="studio-subnav">
+          <div class="studio-tabs">
+            <button class="studio-tab-btn active" id="studioTabGenBtn" data-studio-tab="generate">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Image & Texture Generation</span>
+            </button>
+            <button class="studio-tab-btn" id="studioTabAnalyzeBtn" data-studio-tab="analyze">
+              <i class="fa-solid fa-microscope"></i>
+              <span>Vision Analysis & 3D Inspector</span>
+            </button>
           </div>
-          <div class="luma-control-group">
-            <span class="control-label"><i class="fa-solid fa-expand"></i> Ratio:</span>
-            <div class="ratio-buttons" id="ratioButtons">
-              <button type="button" class="ratio-btn active" data-ratio="16:9">16:9</button>
-              <button type="button" class="ratio-btn" data-ratio="1:1">1:1</button>
-              <button type="button" class="ratio-btn" data-ratio="9:16">9:16</button>
-              <button type="button" class="ratio-btn" data-ratio="4:3">4:3</button>
+          <div class="studio-engine-info">
+            <span class="studio-engine-badge" id="studioActiveEngineBadge">
+              <i class="fa-solid fa-bolt" style="color: #c084fc;"></i> Flux 3D Realism + Gemini Vision
+            </span>
+          </div>
+        </div>
+
+        <!-- STUDIO SUB-VIEW 1: IMAGE GENERATION -->
+        <div class="studio-subview active" id="studioGenView">
+          <div class="studio-grid">
+            <!-- Left: Generator Controls -->
+            <div class="studio-card studio-controls-card">
+              <div class="card-section-title">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Generation Parameters</span>
+              </div>
+
+              <!-- Prompt Input -->
+              <div class="studio-field">
+                <label for="genPromptInput" class="studio-label">Asset Prompt</label>
+                <textarea id="genPromptInput" class="studio-textarea" rows="3" placeholder="Describe the 3D model, environment, or PBR texture you want to generate..."></textarea>
+                <div class="prompt-chips-row">
+                  <span class="chips-label">Inspiration:</span>
+                  <button type="button" class="gen-chip" data-prompt="Cyberpunk neon holographic pedestal 3D asset render, octane, 8k">Cyberpunk Pedestal</button>
+                  <button type="button" class="gen-chip" data-prompt="PBR sci-fi metal blast door texture, normal map depth, high wear, industrial">Sci-Fi Blast Door</button>
+                  <button type="button" class="gen-chip" data-prompt="Isometric floating low-poly fantasy island with waterfall and shrine, vibrant blender render">Isometric Island</button>
+                  <button type="button" class="gen-chip" data-prompt="Futuristic mech pilot cockpit with glowing holographic gauges and carbon fiber">Mech Cockpit</button>
+                  <button type="button" class="gen-chip" data-prompt="Seamless tiling dark obsidian alien stone floor texture, specular roughness">Seamless Alien Tile</button>
+                </div>
+              </div>
+
+              <!-- Style Presets -->
+              <div class="studio-field">
+                <label class="studio-label">3D Aesthetic Preset</label>
+                <div class="style-presets-grid" id="stylePresetsGrid">
+                  <button type="button" class="style-preset-btn active" data-preset="pbr">
+                    <i class="fa-solid fa-cube"></i>
+                    <span>PBR Realistic 3D</span>
+                  </button>
+                  <button type="button" class="style-preset-btn" data-preset="cyberpunk">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Cyberpunk Sci-Fi</span>
+                  </button>
+                  <button type="button" class="style-preset-btn" data-preset="isometric">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Isometric 3D</span>
+                  </button>
+                  <button type="button" class="style-preset-btn" data-preset="texture">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Seamless Texture</span>
+                  </button>
+                  <button type="button" class="style-preset-btn" data-preset="gameprop">
+                    <i class="fa-solid fa-gamepad"></i>
+                    <span>Game Prop</span>
+                  </button>
+                  <button type="button" class="style-preset-btn" data-preset="archviz">
+                    <i class="fa-solid fa-building"></i>
+                    <span>ArchViz Interior</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Aspect Ratio & Engine Row -->
+              <div class="studio-row">
+                <div class="studio-field flex-1">
+                  <label class="studio-label">Aspect Ratio</label>
+                  <div class="ratio-chips" id="genRatioChips">
+                    <button type="button" class="ratio-chip active" data-ratio="16:9">16:9</button>
+                    <button type="button" class="ratio-chip" data-ratio="1:1">1:1</button>
+                    <button type="button" class="ratio-chip" data-ratio="9:16">9:16</button>
+                    <button type="button" class="ratio-chip" data-ratio="4:3">4:3</button>
+                  </div>
+                </div>
+                <div class="studio-field flex-1">
+                  <label for="genEngineSelect" class="studio-label">Generation Engine</label>
+                  <select id="genEngineSelect" class="studio-select">
+                    <option value="flux" selected>Ather3D Fast Engine (Flux & SDXL PBR)</option>
+                    <option value="luma">Luma Dream Machine (Spatial 3D Concept)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Negative Prompt Accordion -->
+              <details class="studio-accordion">
+                <summary><i class="fa-solid fa-shield-halved"></i> Negative Prompt & Quality Filters</summary>
+                <textarea id="genNegativeInput" class="studio-textarea mt-2" rows="2" placeholder="blurry, distorted, low quality, bad anatomy, deformed mesh..."></textarea>
+              </details>
+
+              <!-- Generate Button -->
+              <button type="button" class="btn-primary-action" id="btnRunGenerate">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span id="btnRunGenerateText">Generate 3D Asset</span>
+              </button>
+            </div>
+
+            <!-- Right: Visual Canvas & Recent Generations -->
+            <div class="studio-card studio-canvas-card">
+              <div class="canvas-header">
+                <div class="canvas-title">
+                  <i class="fa-regular fa-image"></i>
+                  <span>Visual Canvas</span>
+                </div>
+                <div class="canvas-actions" id="canvasActions" style="display: none;">
+                  <button type="button" class="canvas-tool-btn primary" id="btnInspectGenerated" title="Send to Vision Inspector">
+                    <i class="fa-solid fa-microscope"></i>
+                    <span>Inspect with Vision AI</span>
+                  </button>
+                  <button type="button" class="canvas-tool-btn" id="btnDownloadGenerated" title="Download Image">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download</span>
+                  </button>
+                  <button type="button" class="canvas-tool-btn" id="btnCopyGenPrompt" title="Copy Prompt">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Canvas Viewport -->
+              <div class="canvas-viewport" id="canvasViewport">
+                <div class="canvas-placeholder" id="canvasPlaceholder">
+                  <div class="placeholder-icon-wrap">
+                    <i class="fa-solid fa-cube"></i>
+                  </div>
+                  <h3 class="placeholder-title">No Asset Generated Yet</h3>
+                  <p class="placeholder-subtitle">Enter a prompt and click Generate to produce 3D concepts, textures, and spatial renders.</p>
+                </div>
+
+                <!-- Canvas Loading State -->
+                <div class="canvas-loading" id="canvasLoading" style="display: none;">
+                  <div class="spatial-radar-loader">
+                    <div class="radar-circle"></div>
+                    <div class="radar-sweep"></div>
+                    <i class="fa-solid fa-cube"></i>
+                  </div>
+                  <p class="loading-label" id="canvasLoadingLabel">Synthesizing 3D textures & spatial lighting...</p>
+                  <span class="loading-sublabel">Generating high-resolution PBR visual</span>
+                </div>
+
+                <!-- Active Generated Image -->
+                <div class="canvas-result" id="canvasResult" style="display: none;">
+                  <img id="generatedImageEl" src="" alt="Generated 3D Visual" />
+                </div>
+              </div>
+
+              <!-- Recent Generations Shelf -->
+              <div class="recent-creations-shelf">
+                <div class="shelf-label">
+                  <span>Recent Creations</span>
+                  <span class="shelf-count" id="shelfCount">0 assets</span>
+                </div>
+                <div class="shelf-thumbnails" id="shelfThumbnails">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="input-card">
-          <textarea
-            id="promptInput"
-            rows="1"
-            placeholder="Ask Ather3D about 3D models, shaders, or environments..."
-            autofocus
-          ></textarea>
-          <div class="input-toolbar">
-            <div class="tool-left">
-              <button class="tool-btn" id="modeSwitchBtn" title="Toggle AI Engine (Gemini / Luma)" aria-label="Toggle AI Engine">
-                <i class="fa-solid fa-sliders"></i>
-                <span class="active-engine-chip" id="activeEngineChip">Gemini</span>
-              </button>
-              <button class="tool-btn" title="Attach file or 3D asset" aria-label="Attach file">
-                <i class="fa-solid fa-paperclip"></i>
-              </button>
-              <button class="tool-btn" title="Voice input" aria-label="Voice input">
-                <i class="fa-solid fa-microphone"></i>
+        <!-- STUDIO SUB-VIEW 2: ANALYSIS & 3D INSPECTOR -->
+        <div class="studio-subview" id="studioAnalyzeView" style="display: none;">
+          <div class="studio-grid">
+            <!-- Left: Image Upload & Inspection Task Config -->
+            <div class="studio-card studio-controls-card">
+              <div class="card-section-title">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                <span>Inspection Input & Setup</span>
+              </div>
+
+              <!-- Drop Zone -->
+              <div class="drop-zone" id="analyzeDropZone">
+                <input type="file" id="analyzeFileInput" accept="image/*" style="display: none;" />
+                
+                <!-- Empty Dropzone State -->
+                <div class="drop-zone-empty" id="dropZoneEmpty">
+                  <div class="drop-icon-wrap">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <div class="drop-text-main">Drop 3D render, texture, or blueprint here</div>
+                  <div class="drop-text-sub">Supports PNG, JPG, WEBP • Paste with <strong>Ctrl+V</strong></div>
+                  <div class="drop-zone-actions">
+                    <button type="button" class="btn-browse-file" id="btnBrowseFile">
+                      <i class="fa-solid fa-folder-open"></i> Browse Files
+                    </button>
+                    <button type="button" class="btn-use-generated" id="btnUseLastGenerated" style="display: none;">
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Use Last Generated
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Loaded Image State in Dropzone -->
+                <div class="drop-zone-loaded" id="dropZoneLoaded" style="display: none;">
+                  <div class="preview-thumb-wrap">
+                    <img id="analyzeThumbEl" src="" alt="Asset to inspect" />
+                  </div>
+                  <div class="preview-thumb-info">
+                    <span class="thumb-filename" id="analyzeFilename">image.png</span>
+                    <span class="thumb-meta" id="analyzeDimensions">Ready for Inspection</span>
+                  </div>
+                  <button type="button" class="btn-remove-thumb" id="btnRemoveAnalyzedImage" title="Remove image">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inspection Task Cards Selector -->
+              <div class="studio-field mt-3">
+                <label class="studio-label">Select Inspection Task</label>
+                <div class="analysis-tasks-list" id="analysisTasksList">
+                  <div class="task-card active" data-task="topology">
+                    <div class="task-card-icon"><i class="fa-solid fa-draw-polygon"></i></div>
+                    <div class="task-card-body">
+                      <div class="task-card-title">Mesh Topology & Polycount Audit</div>
+                      <div class="task-card-desc">Edge flow, quad distribution, poly budget for WebGL/Unity, and modeling tips.</div>
+                    </div>
+                  </div>
+
+                  <div class="task-card" data-task="materials">
+                    <div class="task-card-icon"><i class="fa-solid fa-gem"></i></div>
+                    <div class="task-card-body">
+                      <div class="task-card-title">PBR Material & Texture Breakdown</div>
+                      <div class="task-card-desc">Albedo, Normal depth, Roughness/Metalness values, and Three.js shader code.</div>
+                    </div>
+                  </div>
+
+                  <div class="task-card" data-task="lighting">
+                    <div class="task-card-icon"><i class="fa-solid fa-sun"></i></div>
+                    <div class="task-card-body">
+                      <div class="task-card-title">Lighting & Spatial Atmosphere</div>
+                      <div class="task-card-desc">Key/fill/rim light directions, HDRI reflections, shadow density, and bloom.</div>
+                    </div>
+                  </div>
+
+                  <div class="task-card" data-task="prompt_extract">
+                    <div class="task-card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="task-card-body">
+                      <div class="task-card-title">Prompt & Style Reverse-Engineer</div>
+                      <div class="task-card-desc">Extract exact positive/negative prompts and aesthetic tags to reproduce it.</div>
+                    </div>
+                  </div>
+
+                  <div class="task-card" data-task="game_engine">
+                    <div class="task-card-icon"><i class="fa-solid fa-cubes-stacked"></i></div>
+                    <div class="task-card-body">
+                      <div class="task-card-title">Game Engine & WebGL Optimization</div>
+                      <div class="task-card-desc">Draw calls, LOD strategy, mobile AR viability, and collider geometry.</div>
+                    </div>
+                  </div>
+
+                  <div class="task-card" data-task="general">
+                    <div class="task-card-icon"><i class="fa-solid fa-circle-question"></i></div>
+                    <div class="task-card-body">
+                      <div class="task-card-title">Custom 3D Inquiry</div>
+                      <div class="task-card-desc">Ask any specific technical or artistic question about this image asset.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom Question Input (shows or expands when needed) -->
+              <div class="studio-field mt-2" id="customInquiryField">
+                <label for="analyzeCustomPrompt" class="studio-label">Specific Focus / Custom Question <small class="text-muted">(Optional)</small></label>
+                <input type="text" id="analyzeCustomPrompt" class="custom-input" placeholder="e.g. Can this mesh run at 60fps on Oculus Quest 2?" />
+              </div>
+
+              <!-- Run Analysis Button -->
+              <button type="button" class="btn-primary-action mt-3" id="btnRunAnalysis">
+                <i class="fa-solid fa-microscope"></i>
+                <span id="btnRunAnalysisText">Run 3D Vision Analysis</span>
               </button>
             </div>
-            <div class="tool-right">
-              <button class="send-action-btn" id="sendBtn" title="Send message" disabled aria-label="Send message">
-                <i class="fa-solid fa-arrow-up"></i>
-              </button>
+
+            <!-- Right: Inspection Report & Findings -->
+            <div class="studio-card studio-report-card">
+              <div class="canvas-header">
+                <div class="canvas-title">
+                  <i class="fa-solid fa-file-invoice"></i>
+                  <span>Spatial Vision Audit Report</span>
+                </div>
+                <div class="canvas-actions" id="reportActions" style="display: none;">
+                  <button type="button" class="canvas-tool-btn primary" id="btnDiscussInChat" title="Continue conversation in Spatial Chat">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Discuss in Chat</span>
+                  </button>
+                  <button type="button" class="canvas-tool-btn" id="btnCopyAnalysisReport" title="Copy Markdown Report">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copy Report</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Report Viewport -->
+              <div class="report-viewport" id="reportViewport">
+                <!-- Empty State -->
+                <div class="canvas-placeholder" id="reportPlaceholder">
+                  <div class="placeholder-icon-wrap">
+                    <i class="fa-solid fa-microscope"></i>
+                  </div>
+                  <h3 class="placeholder-title">No Image Analyzed Yet</h3>
+                  <p class="placeholder-subtitle">Upload a 3D model render, blueprint, or texture map on the left to generate an in-depth topology, PBR, and engine report.</p>
+                </div>
+
+                <!-- Analysis Loading State -->
+                <div class="canvas-loading" id="reportLoading" style="display: none;">
+                  <div class="spatial-radar-loader">
+                    <div class="radar-circle"></div>
+                    <div class="radar-sweep"></div>
+                    <i class="fa-solid fa-microscope"></i>
+                  </div>
+                  <p class="loading-label" id="reportLoadingLabel">Auditing 3D topology & shader properties...</p>
+                  <span class="loading-sublabel">Gemini Spatial Vision Intelligence</span>
+                </div>
+
+                <!-- Report Render Output -->
+                <div class="report-output" id="reportOutput" style="display: none;">
+                  <div class="report-meta-bar">
+                    <span class="meta-pill" id="reportTaskBadge"><i class="fa-solid fa-draw-polygon"></i> Topology Audit</span>
+                    <span class="meta-pill model-pill" id="reportModelBadge"><i class="fa-solid fa-microchip"></i> gemini-flash-latest</span>
+                    <span class="meta-pill time-pill" id="reportTimeBadge"><i class="fa-regular fa-clock"></i> Just now</span>
+                  </div>
+                  <div class="report-markdown-body" id="reportMarkdownBody">
+                    <!-- Rendered markdown analysis goes here -->
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="input-disclaimer" id="inputDisclaimer">
-          Ather3D AI helps optimize 3D assets. Please verify polygon counts, transforms, and spatial scale.
         </div>
       </div>
     </main>
