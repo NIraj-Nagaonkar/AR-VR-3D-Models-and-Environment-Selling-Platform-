@@ -18,7 +18,7 @@
         <div class="nav-container">
             <a href="#" class="logo"><i class="fa-solid fa-cube"></i>Aether<span>3D</span></a>
             <div class="nav-actions">
-                <button class="btn btn-outline btn-sm" onclick="toggleAiChatDrawer()" style="border-color: var(--accent-cyan); color: var(--accent-cyan);"> Chat with AI</button>
+                <button class="btn btn-outline btn-sm btn-settings-nav" onclick="openSettingsModal()"><i class="fa-solid fa-gear"></i> Settings</button>
                 <!-- 3-line Hamburger Menu Button -->
                 <button class="menu-toggle" onclick="toggleMenuDropdown()" aria-label="Menu">
                     <span></span>
@@ -27,15 +27,22 @@
                 </button>
             </div>
         </div>
-        <!-- Dropdown Menu Options -->
-        <div class="dropdown-menu" id="menuDropdown">
-            <a class="dropdown-item" onclick="visitClientDashboard()"><i class="fa-solid fa-display"></i> Visit Client Dashboard</a>
-            <a class="dropdown-item" onclick="openModal('profileModal')"><i class="fa-solid fa-user"></i> Profile</a>
-            <a class="dropdown-item" onclick="openModal('settingsModal')"><i class="fa-solid fa-gear"></i> Settings</a>
-            <a class="dropdown-item" onclick="showNotifications()"><i class="fa-solid fa-bell"></i> Notifications</a>
-            <a class="dropdown-item" onclick="visitWorkSpace()"><i class="fa-solid fa-laptop-code"></i> WorkSpace</a>
+
+        <!-- Seamless Top Action Bar: Attached directly beneath Navbar with ZERO GAP -->
+        <div class="top-action-bar" id="menuDropdown">
+            <div class="top-action-container">
+                <button type="button" class="top-action-btn" onclick="visitClientDashboard()">
+                    Visit Client Dashboard
+                </button>
+                <button type="button" class="top-action-btn" onclick="visitWorkSpace()">
+                    WorkSpace
+                </button>
+            </div>
         </div>
     </header>
+
+    <!-- Backdrop Blur for the backside background of the page -->
+    <div class="top-menu-backdrop" id="menuBackdrop" onclick="closeMenuDropdown()"></div>
 
     <!-- Hero Section with Canvas Background -->
     <section class="hero">
@@ -61,10 +68,10 @@
                     
                     <!-- Portfolio Filter Tabs -->
                     <div class="asset-tags" style="margin-top: 1.5rem; gap: 0.75rem;">
-                        <button class="btn btn-outline btn-sm tab-btn active" onclick="filterAssets('all')" style="color: var(--text-dark); border-color: #CBD5E1;">All Models</button>
-                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('ar')" style="color: var(--text-dark); border-color: #CBD5E1;">AR Assets</button>
-                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('vr')" style="color: var(--text-dark); border-color: #CBD5E1;">VR Environments</button>
-                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('twins')" style="color: var(--text-dark); border-color: #CBD5E1;">Digital Twins</button>
+                        <button class="btn btn-outline btn-sm tab-btn active" onclick="filterAssets('all')">All Models</button>
+                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('ar')">AR Assets</button>
+                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('vr')">VR Environments</button>
+                        <button class="btn btn-outline btn-sm tab-btn" onclick="filterAssets('twins')">Digital Twins</button>
                     </div>
                 </div>
             </div>
@@ -95,7 +102,7 @@
                 <div class="asset-card" data-category="vr">
                     <div class="asset-preview">
                         
-                        <div class="asset-badge" style="background: rgba(0, 112, 173, 0.85);">VR Immersive</div>
+                        <div class="asset-badge badge-vr">VR Immersive</div>
                     </div>
                     <div class="asset-details">
                         <h4>Virtual Showroom Environment</h4>
@@ -114,7 +121,7 @@
                 <div class="asset-card" data-category="twins">
                     <div class="asset-preview">
                         
-                        <div class="asset-badge" style="background: rgba(16, 185, 129, 0.85);">Optimized</div>
+                        <div class="asset-badge">Optimized</div>
                     </div>
                     <div class="asset-details">
                         <h4>Smart Facility Spatial Map</h4>
@@ -155,8 +162,9 @@
                         <tr>
                             <th>Request ID</th>
                             <th>Client Name</th>
-                            <th>Project Title</th>
+                            <th>Custom Description</th>
                             <th>Category</th>
+                            <th>Client File</th>
                             <th>Submitted Date</th>
                             <th>Status</th>
                             <th>Actions</th>
@@ -165,7 +173,7 @@
                     <tbody id="queueTableBody">
                         <!-- Empty state row initialization (No false mockup records pre-loaded) -->
                         <tr id="emptyQueueRow">
-                            <td colspan="7" class="empty-queue-row">
+                            <td colspan="8" class="empty-queue-row">
                                 <div class="empty-queue-content">
                                     <i class="fa-regular fa-folder-open"></i>
                                     <span>No active project requests in queue. (Waiting for incoming client submissions)</span>
@@ -178,71 +186,264 @@
         </div>
     </section>
 
-    <!-- Profile Modal -->
-    <div class="modal-overlay" id="profileModal">
-        <div class="modal-content-box">
+    <!-- Settings & Logs Modal (Profile, Session, Security & Privacy) -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content-box settings-modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-user-gear"></i> User Profile</h3>
-                <button class="close-drawer-btn" onclick="closeModal('profileModal')"><i class="fa-solid fa-xmark"></i></button>
+                <h3><i class="fa-solid fa-gear"></i> Settings &amp; Preferences</h3>
+                <button class="close-drawer-btn" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="saveProfile(event)">
+
+            <!-- Settings Navigation Tabs -->
+            <div class="settings-nav-tabs">
+                <button type="button" class="settings-tab-btn active" id="tabBtnProfile" onclick="switchSettingsTab('profile')">
+                    <i class="fa-solid fa-user-gear"></i> Profile
+                </button>
+                <button type="button" class="settings-tab-btn" id="tabBtnSession" onclick="switchSettingsTab('session')">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Session &amp; Logs
+                </button>
+                <button type="button" class="settings-tab-btn" id="tabBtnSecurity" onclick="switchSettingsTab('security')">
+                    <i class="fa-solid fa-shield-halved"></i> Security &amp; Privacy
+                </button>
+            </div>
+
+            <!-- Tab 1: Profile -->
+            <div class="settings-panel active" id="panelProfile">
+                <form onsubmit="saveProfile(event)">
+                    <div class="modal-body">
+                        <div class="profile-header-card">
+                            <div class="profile-avatar-circle">
+                                <span>NN</span>
+                            </div>
+                            <div class="profile-header-info">
+                                <h4>Niraj Nagaonkar</h4>
+                                <span class="profile-role-badge"><i class="fa-solid fa-shield-halved"></i> Lead Spatial Administrator</span>
+                            </div>
+                        </div>
+
+                        <div class="modal-group">
+                            <label for="profileName">Full Name</label>
+                            <input type="text" id="profileName" value="Niraj Nagaonkar" required>
+                        </div>
+                        <div class="modal-group">
+                            <label for="profileEmail">Work Email Address</label>
+                            <input type="email" id="profileEmail" value="niraj@aether3d.dev" required>
+                        </div>
+                        <div class="modal-group">
+                            <label for="profileRole">Administrative Role</label>
+                            <input type="text" id="profileRole" value="Lead Spatial Administrator" disabled>
+                        </div>
+                        <div class="modal-group">
+                            <label for="profileOrg">Organization / Studio</label>
+                            <input type="text" id="profileOrg" value="Aether3D Studio Systems">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('settingsModal')">Close</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i> Save Profile</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab 2: Session & Logs -->
+            <div class="settings-panel" id="panelSession">
                 <div class="modal-body">
-                    <div class="modal-group">
-                        <label for="profileName">Full Name</label>
-                        <input type="text" id="profileName" value="Niraj Nagaonkar" required>
+                    <!-- Active Session Card -->
+                    <div class="session-active-card">
+                        <div class="session-status-row">
+                            <span class="session-status-badge"><i class="fa-solid fa-circle"></i> Active Session</span>
+                            <span class="session-id-text">ID: SES-8921-X</span>
+                        </div>
+                        <div class="session-meta-grid">
+                            <div class="session-meta-item">
+                                <span class="session-meta-label">Device &amp; OS</span>
+                                <span class="session-meta-val"><i class="fa-brands fa-windows"></i> Windows 11 · Desktop</span>
+                            </div>
+                            <div class="session-meta-item">
+                                <span class="session-meta-label">Browser Engine</span>
+                                <span class="session-meta-val"><i class="fa-brands fa-chrome"></i> Chrome / WebGL 2.0</span>
+                            </div>
+                            <div class="session-meta-item">
+                                <span class="session-meta-label">Host Address</span>
+                                <span class="session-meta-val">127.0.0.1 (Localhost)</span>
+                            </div>
+                            <div class="session-meta-item">
+                                <span class="session-meta-label">Auth Token</span>
+                                <span class="session-meta-val">JWT Bearer (Valid)</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="modal-group">
-                        <label for="profileEmail">Email Address</label>
-                        <input type="email" id="profileEmail" value="niraj@aether3d.dev" required>
-                    </div>
-                    <div class="modal-group">
-                        <label for="profileRole">Access Role</label>
-                        <input type="text" id="profileRole" value="Lead Spatial Developer" disabled>
+
+                    <!-- Session Activity Logs -->
+                    <div class="session-logs-container">
+                        <div class="session-logs-header">
+                            <h5><i class="fa-solid fa-list-check"></i> Recent Activity Logs</h5>
+                            <button type="button" class="clear-logs-btn" onclick="clearSessionLogs()">Clear Logs</button>
+                        </div>
+                        <div class="session-logs-list" id="sessionLogsList">
+                            <div class="session-log-entry">
+                                <div class="log-entry-icon"><i class="fa-solid fa-key"></i></div>
+                                <div class="log-entry-content">
+                                    <span class="log-entry-title">Admin Authentication Verified</span>
+                                    <span class="log-entry-desc">JWT token authorized for Lead Spatial Administrator</span>
+                                </div>
+                                <span class="log-entry-time">Active</span>
+                            </div>
+                            <div class="session-log-entry">
+                                <div class="log-entry-icon"><i class="fa-solid fa-inbox"></i></div>
+                                <div class="log-entry-content">
+                                    <span class="log-entry-title">Project Request Queue Synced</span>
+                                    <span class="log-entry-desc">Loaded incoming client model specifications</span>
+                                </div>
+                                <span class="log-entry-time">15m ago</span>
+                            </div>
+                            <div class="session-log-entry">
+                                <div class="log-entry-icon"><i class="fa-solid fa-cube"></i></div>
+                                <div class="log-entry-content">
+                                    <span class="log-entry-title">3D WebGL Canvas Initialized</span>
+                                    <span class="log-entry-desc">Three.js hardware acceleration running</span>
+                                </div>
+                                <span class="log-entry-time">1h ago</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline btn-sm" style="color: var(--text-dark); border-color: #CBD5E1;" onclick="closeModal('profileModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('settingsModal')">Close</button>
+                    <button type="button" class="btn btn-reject btn-sm" onclick="logoutAdmin()"><i class="fa-solid fa-arrow-right-from-bracket"></i> End Session &amp; Log Out</button>
                 </div>
-            </form>
+            </div>
+
+            <!-- Tab 3: Security & Privacy -->
+            <div class="settings-panel" id="panelSecurity">
+                <form onsubmit="saveSecurityPrivacy(event)">
+                    <div class="modal-body">
+                        <!-- Password Management -->
+                        <div class="security-card">
+                            <h5><i class="fa-solid fa-lock"></i> Update Account Password</h5>
+                            <div class="modal-group" style="margin-top: 0.75rem;">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" placeholder="••••••••••••">
+                            </div>
+                            <div class="detail-grid-row">
+                                <div class="modal-group">
+                                    <label for="newPassword">New Password</label>
+                                    <input type="password" id="newPassword" placeholder="Minimum 8 characters">
+                                </div>
+                                <div class="modal-group">
+                                    <label for="confirmPassword">Confirm New Password</label>
+                                    <input type="password" id="confirmPassword" placeholder="Repeat new password">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Security & Privacy Toggles -->
+                        <div class="security-card" style="margin-top: 1rem;">
+                            <h5><i class="fa-solid fa-shield-halved"></i> Security &amp; Privacy Preferences</h5>
+                            
+                            <div class="security-toggle-item">
+                                <div class="toggle-text">
+                                    <strong>Two-Factor Authentication (2FA)</strong>
+                                    <span>Require secondary verification upon administrator login</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="twoFactorToggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="security-toggle-item">
+                                <div class="toggle-text">
+                                    <strong>Client Blueprint Strict Privacy</strong>
+                                    <span>Encrypt client-uploaded files and restrict public indexation</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="blueprintPrivacyToggle" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="security-toggle-item">
+                                <div class="toggle-text">
+                                    <strong>Automatic Session Timeout</strong>
+                                    <span>Automatically lock console after 30 minutes of idle time</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="sessionTimeoutToggle" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('settingsModal')">Close</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-shield-check"></i> Save Security &amp; Privacy</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal-content-box">
+    <!-- Project Request Details Modal -->
+    <div class="modal-overlay" id="requestDetailsModal">
+        <div class="modal-content-box request-details-modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-sliders"></i> System Settings</h3>
-                <button class="close-drawer-btn" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
+                <h3><i class="fa-solid fa-file-circle-check"></i> Project Request Details</h3>
+                <button class="close-drawer-btn" onclick="closeModal('requestDetailsModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form onsubmit="saveSettings(event)">
-                <div class="modal-body">
-                    <div class="modal-group">
-                        <label for="envSelect">Default 3D Quality</label>
-                        <select id="envSelect">
-                            <option value="ultra" selected>Ultra (Full PBR Textures)</option>
-                            <option value="balanced">Balanced (Optimized LOD)</option>
-                            <option value="performance">Performance (Low Poly)</option>
-                        </select>
+            <div class="modal-body">
+                <div class="detail-meta-grid">
+                    <div class="detail-meta-card">
+                        <span class="detail-meta-label">Request ID</span>
+                        <span class="detail-meta-value" id="detailRequestId">-</span>
                     </div>
-                    <div class="modal-group">
-                        <label for="refreshRate">Renderer Frame Rate</label>
-                        <select id="refreshRate">
-                            <option value="60fps" selected>60 FPS Target</option>
-                            <option value="120fps">120 FPS High Refresh</option>
-                            <option value="unlimited">Unlimited VSync Off</option>
-                        </select>
+                    <div class="detail-meta-card">
+                        <span class="detail-meta-label">Status</span>
+                        <span class="detail-meta-value" id="detailStatusBadge">-</span>
                     </div>
-                    <div class="modal-group">
-                        <label for="apiKeyInput">Aether AI Core API Key</label>
-                        <input type="password" id="apiKeyInput" value="••••••••••••••••••••" required>
+                    <div class="detail-meta-card">
+                        <span class="detail-meta-label">Client Name</span>
+                        <span class="detail-meta-value" id="detailClientName">-</span>
+                    </div>
+                    <div class="detail-meta-card">
+                        <span class="detail-meta-label">Work Email</span>
+                        <span class="detail-meta-value" id="detailClientEmail">-</span>
+                    </div>
+                    <div class="detail-meta-card">
+                        <span class="detail-meta-label">Target Platform</span>
+                        <span class="detail-meta-value" id="detailPlatform">-</span>
+                    </div>
+                    <div class="detail-meta-card">
+                        <span class="detail-meta-label">Submitted Date</span>
+                        <span class="detail-meta-value" id="detailDate">-</span>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline btn-sm" style="color: var(--text-dark); border-color: #CBD5E1;" onclick="closeModal('settingsModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Save Preferences</button>
+
+                <!-- Client Custom Description Section -->
+                <div class="detail-section-block">
+                    <div class="detail-section-title">
+                        <i class="fa-solid fa-align-left"></i>
+                        <span>Client Custom Description</span>
+                    </div>
+                    <div class="custom-description-box" id="detailDescriptionText">
+                        <!-- Populated dynamically -->
+                    </div>
                 </div>
-            </form>
+
+                <!-- Client Sent File Section -->
+                <div class="detail-section-block">
+                    <div class="detail-section-title">
+                        <i class="fa-solid fa-paperclip"></i>
+                        <span>Client Sent File / Blueprint</span>
+                    </div>
+                    <div class="client-file-container" id="detailFileContainer">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="detailModalFooter">
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('requestDetailsModal')">Close</button>
+            </div>
         </div>
     </div>
 

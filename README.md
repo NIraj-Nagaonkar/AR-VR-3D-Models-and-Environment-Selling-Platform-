@@ -38,7 +38,16 @@ The Express backend seamlessly serves both the REST API and the static frontend 
 - **Unified Server**: Single command starts both the RESTful API and serves the full frontend.
 - **Role-Based Authentication**: Secure JWT-based authentication with bcrypt password hashing for **Admin** and **Customer** roles.
 - **Custom 3D Request Pipeline**: Customers can request bespoke 3D environments with file uploads (blueprints/references via Multer).
-- **Admin Dashboard**: Real-time management of requests with status transitions (`pending` ➔ `accepted` ➔ `rejected` ➔ `completed`).
+- **Admin Dashboard**:
+  - **Incoming Project Requests Queue**: Real-time management of incoming client requests with live status transitions (`Pending` ➔ `Accepted` ➔ `Rejected`).
+  - **Client File Inspection**: Direct access to client-uploaded blueprints, PDFs, 3D models (GLTF/GLB), and reference files right from the queue table with dynamic file-type icons and download links.
+  - **Custom Description & Details Modal**: Dedicated column and modal view displaying the client's full custom specifications, metadata, and decision controls.
+  - **Settings & System Preferences Center**:
+    - **Profile Management**: View and edit administrator details, work email, organization/studio, and spatial administrative role credentials.
+    - **Session & Activity Logs**: Real-time active session telemetry (Device/OS, browser engine, host, JWT bearer verification), live activity audit logs with timestamp tracking, clear log triggers, and one-click session logout.
+    - **Security & Privacy Controls**: Account password update suite, Two-Factor Authentication (2FA) toggle, client blueprint strict privacy encryption switch, and automated idle session lock timeout.
+  - **Smooth Top Action Bar**: Ultra-smooth vertical slide-down menu with zero-gap navbar attachment, vibrant purple action buttons (**Visit Client Dashboard** & **WorkSpace**), and a soft backside background blur effect.
+  - **Modern White & Purple Aesthetic**: Crisp white card surfaces with neutral slate borders and luminous purple action buttons.
 - **Ather3D Workspace Studio**:
   - **Spatial AI Chat**: Interactive Gemini 3D engineering assistant with multi-session history and multi-model failover.
   - **Visual Studio - Image & Texture Generator**: Create 3D concept renders, PBR texture maps, and isometric models using Flux & Luma with aspect ratios and style presets.
@@ -225,7 +234,8 @@ The system features automatic role assignment:
   - Automatically assigned the `admin` role.
   - Redirected to the **Admin Dashboard** (`/admin`).
   - Access to the **Ather3D Workspace** (`/workspace`).
-  - View, approve, reject, or complete customer 3D model requests.
+  - View, approve, or reject incoming customer 3D model requests.
+  - Inspect client custom descriptions and directly view or download uploaded blueprints/reference files.
 
 ### 2. Customer Role
 - **How to register**: Sign up with any other email address.

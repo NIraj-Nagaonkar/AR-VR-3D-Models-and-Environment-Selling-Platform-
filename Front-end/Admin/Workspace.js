@@ -1,4 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+  // --- Load Logged-in User Profile ---
+  function loadUserProfile() {
+    try {
+      const raw = (localStorage.getItem('aether_user_data') || localStorage.getItem('ather_user_data'));
+      const user = raw ? JSON.parse(raw) : null;
+      const nameEl = document.getElementById('sidebarUserName') || document.querySelector('.user-name');
+      const roleEl = document.getElementById('sidebarUserRole') || document.querySelector('.user-role');
+      const welcomeSubject = document.getElementById('welcomeGreetingSubject');
+      const userImg = document.querySelector('.user-avatar-img');
+      const navImg = document.querySelector('.nav-user-avatar img');
+
+      const defaultAvatar = '../../Assets/admin-avatar.png';
+      if (user && user.name) {
+        const cleanName = user.name.replace(/Ather/gi, 'Aether');
+        if (nameEl) nameEl.textContent = cleanName;
+        if (roleEl) roleEl.textContent = user.role === 'admin' ? 'Administrator' : 'Creator Member';
+        if (welcomeSubject) {
+          if (/ather|aether|3d/i.test(cleanName)) {
+            welcomeSubject.textContent = 'Creator';
+          } else {
+            welcomeSubject.textContent = cleanName.split(' ')[0] || cleanName;
+          }
+        }
+        if (user.name.includes('Ather')) {
+          user.name = cleanName;
+          try { localStorage.setItem('aether_user_data', JSON.stringify(user)); } catch (e) {}
+        }
+        const avatarUrl = user.avatar || defaultAvatar;
+        if (userImg) userImg.src = avatarUrl;
+        if (navImg) navImg.src = avatarUrl;
+      } else {
+        if (nameEl) nameEl.textContent = 'Aether3D Admin';
+        if (roleEl) roleEl.textContent = 'Administrator';
+        if (welcomeSubject) welcomeSubject.textContent = 'Creator';
+        if (userImg) userImg.src = defaultAvatar;
+        if (navImg) navImg.src = defaultAvatar;
+      }
+    } catch (err) {
+      console.warn('Could not load user profile from storage', err);
+    }
+  }
+
   // --- DOM Elements ---
   const sidebar = document.getElementById('sidebar');
   const menuBtn = document.getElementById('menuBtn');
@@ -58,10 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const DEFAULT_GEMINI_MODEL = "gemini-flash-latest";
   const DEFAULT_LUMA_KEY = "";
   const DEFAULT_LUMA_MODEL = "uni-1";
-  const SESSIONS_STORAGE_KEY = "ather_chat_sessions";
+  const SESSIONS_STORAGE_KEY = "aether_chat_sessions";
   
-  const SYSTEM_INSTRUCTION = `You are the Ather3D AI Assistant, an advanced spatial artificial intelligence integrated directly into the Ather3D Workspace.
-Ather3D is a next-generation platform for AR/VR 3D models, digital twins, real-time WebGL rendering (Three.js), and spatial immersive environments.
+  const SYSTEM_INSTRUCTION = `You are the Aether3D AI Assistant, an advanced spatial artificial intelligence integrated directly into the Aether3D Workspace.
+Aether3D is a next-generation platform for AR/VR 3D models, digital twins, real-time WebGL rendering (Three.js), and spatial immersive environments.
 Your responsibilities:
 - Provide concise, practical, technical assistance on 3D modeling, asset topology, and polygon budgeting.
 - Help optimize WebGL shaders, Three.js scenes, PBR texture maps (Albedo, Normal, Roughness, Metalness, ORM), and WebXR setups.
@@ -93,24 +136,24 @@ Your responsibilities:
 
   // --- Key & Model Accessors ---
   function getActiveApiKey() {
-    return localStorage.getItem('ather_gemini_api_key') || DEFAULT_GEMINI_KEY;
+    return (localStorage.getItem('aether_gemini_api_key') || localStorage.getItem('ather_gemini_api_key')) || DEFAULT_GEMINI_KEY;
   }
 
   function getActiveModel() {
-    const saved = localStorage.getItem('ather_gemini_model');
+    const saved = (localStorage.getItem('aether_gemini_model') || localStorage.getItem('ather_gemini_model'));
     if (!saved || saved.includes('2.5') || saved.includes('1.5')) {
-      localStorage.setItem('ather_gemini_model', DEFAULT_GEMINI_MODEL);
+      localStorage.setItem('aether_gemini_model', DEFAULT_GEMINI_MODEL);
       return DEFAULT_GEMINI_MODEL;
     }
     return saved;
   }
 
   function getActiveLumaKey() {
-    return localStorage.getItem('ather_luma_api_key') || DEFAULT_LUMA_KEY;
+    return (localStorage.getItem('aether_luma_api_key') || localStorage.getItem('ather_luma_api_key')) || DEFAULT_LUMA_KEY;
   }
 
   function getActiveLumaModel() {
-    return localStorage.getItem('ather_luma_model') || DEFAULT_LUMA_MODEL;
+    return (localStorage.getItem('aether_luma_model') || localStorage.getItem('ather_luma_model')) || DEFAULT_LUMA_MODEL;
   }
 
   // --- Persistent Chat History Storage ---
@@ -165,7 +208,7 @@ Your responsibilities:
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-chat-btn';
       deleteBtn.title = 'Delete Session';
-      deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+      deleteBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
 
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -222,7 +265,7 @@ Your responsibilities:
       } else {
         messageEl.classList.add('message', 'bot');
         messageEl.innerHTML = `
-          <div class="bot-avatar" title="Ather3D Core"><i class="fa-solid fa-cube"></i></div>
+          <div class="bot-avatar" title="Aether3D Core"><i class="fa-solid fa-cube"></i></div>
           <div class="bubble">${formatMarkdown(msg.text)}</div>
         `;
         conversationHistory.push({ role: 'model', parts: [{ text: msg.text }] });
@@ -308,10 +351,10 @@ Your responsibilities:
       engineLumaBtn?.classList.remove('active');
       if (activeEngineChip) activeEngineChip.textContent = 'Gemini';
       if (lumaControlsBar) lumaControlsBar.style.display = 'none';
-      if (promptInput) promptInput.placeholder = 'Ask Ather3D about 3D models, shaders, or environments...';
+      if (promptInput) promptInput.placeholder = 'Ask Aether3D about 3D models, shaders, or environments...';
       if (welcomeGreetingSubject) welcomeGreetingSubject.textContent = 'Creator';
-      if (welcomeSubtitle) welcomeSubtitle.textContent = 'How can Ather3D assist your 3D models and spatial environments today?';
-      if (inputDisclaimer) inputDisclaimer.textContent = 'Ather3D AI helps optimize 3D assets. Please verify polygon counts, transforms, and spatial scale.';
+      if (welcomeSubtitle) welcomeSubtitle.textContent = 'How can Aether3D assist your 3D models and spatial environments today?';
+      if (inputDisclaimer) inputDisclaimer.textContent = 'Aether3D AI helps optimize 3D assets. Please verify polygon counts, transforms, and spatial scale.';
       renderSuggestionCards(GEMINI_SUGGESTIONS);
     } else {
       engineLumaBtn?.classList.add('active');
@@ -363,12 +406,37 @@ Your responsibilities:
 
   // Model change in controls bar syncs with default
   lumaModelSelect?.addEventListener('change', () => {
-    localStorage.setItem('ather_luma_model', lumaModelSelect.value);
+    localStorage.setItem('aether_luma_model', lumaModelSelect.value);
   });
 
   // --- Sidebar Collapse / Expand ---
-  menuBtn?.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
+  const topNavMenuBtn = document.getElementById('topNavMenuBtn');
+  const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+
+  function toggleSidebar(forceState) {
+    if (!sidebar) return;
+    const shouldCollapse = forceState !== undefined ? forceState : !sidebar.classList.contains('collapsed');
+    sidebar.classList.toggle('collapsed', shouldCollapse);
+    if (sidebarToggleIcon) {
+      sidebarToggleIcon.className = shouldCollapse ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left';
+    }
+    localStorage.setItem('aether_sidebar_collapsed', shouldCollapse);
+    window.dispatchEvent(new Event('resize'));
+  }
+
+  // Restore saved collapse state
+  if ((localStorage.getItem('aether_sidebar_collapsed') || localStorage.getItem('ather_sidebar_collapsed')) === 'true') {
+    toggleSidebar(true);
+  }
+
+  menuBtn?.addEventListener('click', () => toggleSidebar());
+  topNavMenuBtn?.addEventListener('click', () => toggleSidebar());
+
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      toggleSidebar();
+    }
   });
 
   // --- Auto-resize input & toggle send button ---
@@ -460,7 +528,7 @@ Your responsibilities:
     // 4. Render Initial Bot Loading Bubble
     const botMessageEl = appendMessage('', 'bot');
     const bubble = botMessageEl.querySelector('.bubble');
-    bubble.innerHTML = '<span style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Ather3D is reasoning about 3D topology & shaders...</span>';
+    bubble.innerHTML = '<span style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Aether3D is reasoning about 3D topology & shaders...</span>';
     scrollToBottom();
 
     // 5. Request Google Gemini API (Direct if custom key configured, or via backend /api/chat)
@@ -510,14 +578,14 @@ Your responsibilities:
               errText.toLowerCase().includes('overloaded');
 
             if (isHighDemand && candModel !== candidateModels[candidateModels.length - 1]) {
-              console.warn(`[Ather3D] Model ${candModel} high demand (HTTP ${response.status}). Failing over to next candidate...`);
+              console.warn(`[Aether3D] Model ${candModel} high demand (HTTP ${response.status}). Failing over to next candidate...`);
               await new Promise(r => setTimeout(r, 600));
               continue;
             }
 
             lastErrData = data;
           } catch (fetchErr) {
-            console.warn(`[Ather3D] Model ${candModel} request failed:`, fetchErr);
+            console.warn(`[Aether3D] Model ${candModel} request failed:`, fetchErr);
           }
         }
 
@@ -562,7 +630,7 @@ Your responsibilities:
         });
 
         document.getElementById('quickRetryPromptBtn')?.addEventListener('click', () => {
-          localStorage.setItem('ather_gemini_model', 'gemini-flash-latest');
+          localStorage.setItem('aether_gemini_model', 'gemini-flash-latest');
           if (promptInput) {
             promptInput.value = text;
             handleSendMessage();
@@ -816,7 +884,7 @@ Your responsibilities:
                 ${mediaHtml}
               </div>
               <div class="luma-media-toolbar">
-                <a href="${escapeHtml(assetUrl)}" target="_blank" download="ather3d-luma-asset" class="luma-action-btn">
+                <a href="${escapeHtml(assetUrl)}" target="_blank" download="aether3d-luma-asset" class="luma-action-btn">
                   <i class="fa-solid fa-download"></i> Download Asset
                 </a>
                 <button type="button" class="luma-action-btn" id="${cardId}_copyBtn">
@@ -919,7 +987,7 @@ Your responsibilities:
       messageEl.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
     } else {
       messageEl.innerHTML = `
-        <div class="bot-avatar" title="Ather3D Core"><i class="fa-solid fa-cube"></i></div>
+        <div class="bot-avatar" title="Aether3D Core"><i class="fa-solid fa-cube"></i></div>
         <div class="bubble"></div>
       `;
     }
@@ -998,6 +1066,198 @@ Your responsibilities:
     }
   });
 
+  // ==========================================================================
+  // User Profile Modal Controller (Display all details about logged-in user)
+  // ==========================================================================
+  const userProfileModal = document.getElementById('userProfileModal');
+  const closeProfileModalBtn = document.getElementById('closeProfileModalBtn');
+  const closeProfileFooterBtn = document.getElementById('closeProfileFooterBtn');
+  const userCard = document.getElementById('userCard');
+  const navUserAvatar = document.getElementById('navUserAvatar');
+  const sideNavProfileBtn = document.getElementById('sideNavProfileBtn');
+  const btnCopyUserId = document.getElementById('btnCopyUserId');
+  const btnProfileLogout = document.getElementById('btnProfileLogout');
+  const modalLinkAdminDashboard = document.getElementById('modalLinkAdminDashboard');
+
+  function getStoredUser() {
+    try {
+      const raw = (localStorage.getItem('aether_user_data') || localStorage.getItem('ather_user_data'));
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function getStoredToken() {
+    return (localStorage.getItem('aether_auth_token') || localStorage.getItem('ather_auth_token') || '');
+  }
+
+  function renderProfileDetails(user) {
+    const rawName = (user && user.name) ? user.name : 'Niraj Nagaonkar';
+    const cleanName = rawName.replace(/Ather/gi, 'Aether');
+    const email = (user && user.email) ? user.email : 'niraj@aether3d.dev';
+    const role = (user && user.role) ? user.role.toLowerCase() : 'admin';
+    const isAdmin = role === 'admin';
+    const userId = (user && (user._id || user.id)) ? (user._id || user.id) : 'USR-89214-AETHER';
+
+    let createdDateStr = 'September 2026';
+    if (user && user.createdAt) {
+      try {
+        const d = new Date(user.createdAt);
+        createdDateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch (e) {}
+    }
+
+    const avatarUrl = (user && user.avatar) ? user.avatar : '../../Assets/admin-avatar.png';
+
+    const modalAvatar = document.getElementById('modalProfileAvatar');
+    const modalName = document.getElementById('modalProfileName');
+    const modalRoleBadge = document.getElementById('modalProfileRoleBadge');
+    const modalEmail = document.getElementById('modalProfileEmail');
+    const modalId = document.getElementById('modalProfileId');
+    const detailName = document.getElementById('detailModalName');
+    const detailEmail = document.getElementById('detailModalEmail');
+    const detailRole = document.getElementById('detailModalRole');
+    const detailCreated = document.getElementById('detailModalCreated');
+    const privilegeAdmin = document.getElementById('privilegeAdminDashboard');
+
+    if (modalAvatar) modalAvatar.src = avatarUrl;
+    if (modalName) modalName.textContent = cleanName;
+    if (modalEmail) modalEmail.textContent = email;
+    if (modalId) modalId.textContent = userId;
+    if (detailName) detailName.textContent = cleanName;
+    if (detailEmail) detailEmail.textContent = email;
+    if (detailCreated) detailCreated.textContent = createdDateStr;
+
+    if (modalRoleBadge) {
+      modalRoleBadge.innerHTML = isAdmin 
+        ? '<i class="fa-solid fa-shield-halved"></i> Administrator' 
+        : '<i class="fa-solid fa-user-astronaut"></i> Customer Member';
+      modalRoleBadge.className = isAdmin ? 'profile-badge-role admin' : 'profile-badge-role customer';
+    }
+
+    if (detailRole) {
+      detailRole.textContent = isAdmin ? 'System Administrator (Full Privileges)' : 'Customer Creator (Standard Privileges)';
+    }
+
+    if (privilegeAdmin) {
+      privilegeAdmin.style.opacity = isAdmin ? '1' : '0.4';
+      privilegeAdmin.title = isAdmin ? 'Full Admin Queue Access' : 'Admin Queue Restricted to Administrators';
+    }
+
+    if (modalLinkAdminDashboard) {
+      if (isAdmin) {
+        modalLinkAdminDashboard.href = 'Admin.html';
+        modalLinkAdminDashboard.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Admin Dashboard</span>';
+      } else {
+        modalLinkAdminDashboard.href = '../Customer/Customer.html';
+        modalLinkAdminDashboard.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> <span>Customer Portal</span>';
+      }
+    }
+  }
+
+  async function openProfileModal() {
+    if (!userProfileModal) return;
+
+    let user = getStoredUser();
+    const token = getStoredToken();
+
+    renderProfileDetails(user);
+    userProfileModal.style.display = 'flex';
+
+    if (token) {
+      try {
+        const res = await fetch('/api/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.user) {
+            user = data.user;
+            try {
+              localStorage.setItem('aether_user_data', JSON.stringify(user));
+              localStorage.setItem('ather_user_data', JSON.stringify(user));
+            } catch (err) {}
+            renderProfileDetails(user);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not refresh user details from /api/users/me:', err);
+      }
+    }
+  }
+
+  function closeProfileModal() {
+    if (userProfileModal) {
+      userProfileModal.style.display = 'none';
+    }
+  }
+
+  // Trigger bindings for Profile Modal
+  userCard?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openProfileModal();
+  });
+
+  navUserAvatar?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openProfileModal();
+  });
+
+  sideNavProfileBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openProfileModal();
+  });
+
+  closeProfileModalBtn?.addEventListener('click', closeProfileModal);
+  closeProfileFooterBtn?.addEventListener('click', closeProfileModal);
+
+  userProfileModal?.addEventListener('click', (e) => {
+    if (e.target === userProfileModal) {
+      closeProfileModal();
+    }
+  });
+
+  // Copy User ID
+  btnCopyUserId?.addEventListener('click', () => {
+    const idEl = document.getElementById('modalProfileId');
+    if (idEl) {
+      const textToCopy = idEl.textContent.trim();
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        if (typeof showToast === 'function') {
+          showToast('User ID copied to clipboard!');
+        }
+        btnCopyUserId.innerHTML = '<i class="fa-solid fa-check" style="color: #4ade80;"></i>';
+        setTimeout(() => {
+          btnCopyUserId.innerHTML = '<i class="fa-regular fa-copy"></i>';
+        }, 2000);
+      }).catch(() => {
+        if (typeof showToast === 'function') {
+          showToast('Could not copy User ID');
+        }
+      });
+    }
+  });
+
+  // End Session & Log Out
+  btnProfileLogout?.addEventListener('click', () => {
+    if (confirm('Are you sure you want to end your session and log out?')) {
+      localStorage.removeItem('aether_auth_token');
+      localStorage.removeItem('ather_auth_token');
+      localStorage.removeItem('aether_user_data');
+      localStorage.removeItem('ather_user_data');
+      window.location.href = '../Login/login.html';
+    }
+  });
+
+  // Global ESC key listener to dismiss open modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeProfileModal();
+      closeSettingsModal();
+    }
+  });
+
   // Toggle API Key visibility
   toggleKeyVisibility?.addEventListener('click', () => {
     const isPassword = apiKeyInput.type === 'password';
@@ -1043,11 +1303,11 @@ Your responsibilities:
     const newLumaKey = lumaApiKeyInput.value.trim();
     const newLumaModel = modalLumaModelSelect.value;
 
-    if (newKey) localStorage.setItem('ather_gemini_api_key', newKey);
-    if (newModel) localStorage.setItem('ather_gemini_model', newModel);
-    if (newLumaKey) localStorage.setItem('ather_luma_api_key', newLumaKey);
+    if (newKey) localStorage.setItem('aether_gemini_api_key', newKey);
+    if (newModel) localStorage.setItem('aether_gemini_model', newModel);
+    if (newLumaKey) localStorage.setItem('aether_luma_api_key', newLumaKey);
     if (newLumaModel) {
-      localStorage.setItem('ather_luma_model', newLumaModel);
+      localStorage.setItem('aether_luma_model', newLumaModel);
       if (lumaModelSelect) lumaModelSelect.value = newLumaModel;
     }
 
@@ -1066,11 +1326,12 @@ Your responsibilities:
   // Visual Studio Controller: Image Generation & 3D Vision Analysis
   // ==========================================================================
   function initVisualStudio() {
+    const viewStudioPane = document.getElementById('viewStudioPane');
+    if (!viewStudioPane) return;
     // --- Navigation Elements ---
     const tabViewChat = document.getElementById('tabViewChat');
     const tabViewStudio = document.getElementById('tabViewStudio');
     const viewChatPane = document.getElementById('viewChatPane');
-    const viewStudioPane = document.getElementById('viewStudioPane');
     const sideNavChatBtn = document.getElementById('sideNavChatBtn');
     const sideNavGenerateBtn = document.getElementById('sideNavGenerateBtn');
     const sideNavAnalyzeBtn = document.getElementById('sideNavAnalyzeBtn');
@@ -1260,7 +1521,7 @@ Your responsibilities:
     // --- Recent Creations Storage ---
     function getStoredCreations() {
       try {
-        const stored = localStorage.getItem('ather_recent_creations');
+        const stored = (localStorage.getItem('aether_recent_creations') || localStorage.getItem('ather_recent_creations'));
         return stored ? JSON.parse(stored) : [];
       } catch (e) {
         return [];
@@ -1269,7 +1530,7 @@ Your responsibilities:
 
     function saveStoredCreations(list) {
       try {
-        localStorage.setItem('ather_recent_creations', JSON.stringify(list.slice(0, 15)));
+        localStorage.setItem('aether_recent_creations', JSON.stringify(list.slice(0, 15)));
       } catch (e) {}
     }
 
@@ -1440,7 +1701,7 @@ Your responsibilities:
       try {
         const link = document.createElement('a');
         link.href = lastGeneratedData.url;
-        link.download = `Ather3D_Asset_${Date.now()}.png`;
+        link.download = `Aether3D_Asset_${Date.now()}.png`;
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
@@ -1736,6 +1997,540 @@ Your responsibilities:
     renderCreationsShelf();
   }
 
+
+  // ==========================================================================
+  // Figma AI Chat Workspace UI Enhancements
+  // - Interactive Three.js 3D Cyber Helmet Scene in Live Viewport & Inspector
+  // - Collapsible 3D Asset Inspector Panel & Tab System
+  // - Suggestion Chips, Quick Actions & GLB Exporters
+  // ==========================================================================
+  function initFigmaWorkspaceUI() {
+    // --- 1. Three.js 3D Cyber Helmet Engine ---
+    let helmetGroup = null;
+    let mainRenderer = null;
+    let mainCamera = null;
+    let mainScene = null;
+    let mainControls = null;
+    let inspectorRenderer = null;
+    let inspectorCamera = null;
+    let carbonMat = null;
+    let metalAccentMat = null;
+    let visorMat = null;
+    let keyLight = null;
+    let limeRimLight = null;
+    let isWireframe = false;
+    let autoRotate = true;
+
+    function init3DScene() {
+      const mainCanvas = document.getElementById('main3dCanvas');
+      const container = document.getElementById('main3dContainer');
+      const inspectorCanvas = document.getElementById('inspector3dCanvas');
+
+      if ((!mainCanvas && !inspectorCanvas) || typeof THREE === 'undefined') {
+        console.warn('Three.js or 3D Canvas element not found');
+        return;
+      }
+
+      // Main Scene
+      mainScene = new THREE.Scene();
+
+      if (mainCanvas && container) {
+        mainCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+        mainCamera.position.set(0, 0.5, 4.3);
+
+        mainRenderer = new THREE.WebGLRenderer({ canvas: mainCanvas, antialias: true, alpha: true });
+        mainRenderer.setSize(container.clientWidth, container.clientHeight);
+        mainRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        mainRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+        mainRenderer.toneMappingExposure = 1.25;
+      }
+
+      // Inspector Mini Viewport (if present)
+      if (inspectorCanvas && inspectorCanvas.parentElement) {
+        const inspWrap = inspectorCanvas.parentElement;
+        const w = (inspWrap.clientWidth > 0) ? inspWrap.clientWidth : 296;
+        const h = (inspWrap.clientHeight > 0) ? inspWrap.clientHeight : 140;
+        const aspect = (h > 0) ? (w / h) : (16 / 9);
+
+        inspectorCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
+        inspectorCamera.position.set(0, 0.5, 4.5);
+        inspectorRenderer = new THREE.WebGLRenderer({ canvas: inspectorCanvas, antialias: true, alpha: true });
+        inspectorRenderer.setSize(w, h);
+        inspectorRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Use ResizeObserver for instant, seamless aspect ratio updates
+        if (typeof ResizeObserver !== 'undefined') {
+          const ro = new ResizeObserver(() => {
+            if (inspWrap.clientWidth > 0 && inspWrap.clientHeight > 0 && inspectorCamera && inspectorRenderer) {
+              inspectorCamera.aspect = inspWrap.clientWidth / inspWrap.clientHeight;
+              inspectorCamera.updateProjectionMatrix();
+              inspectorRenderer.setSize(inspWrap.clientWidth, inspWrap.clientHeight);
+            }
+          });
+          ro.observe(inspWrap);
+        }
+      }
+
+      // OrbitControls for Live Viewport
+      if (typeof THREE.OrbitControls !== 'undefined') {
+        mainControls = new THREE.OrbitControls(mainCamera, mainRenderer.domElement);
+        mainControls.enableDamping = true;
+        mainControls.dampingFactor = 0.05;
+        mainControls.maxDistance = 8;
+        mainControls.minDistance = 1.6;
+        mainControls.target.set(0, 0, 0);
+      }
+
+      // Lighting System
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      mainScene.add(ambientLight);
+
+      keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
+      keyLight.position.set(4, 5, 4);
+      mainScene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0x64748b, 0.6);
+      fillLight.position.set(-4, 2, -3);
+      mainScene.add(fillLight);
+
+      limeRimLight = new THREE.DirectionalLight(0xc084fc, 2.0);
+      limeRimLight.position.set(0, -1, 3.5);
+      mainScene.add(limeRimLight);
+
+      // Cybernetic Visor Helmet Geometry Group
+      helmetGroup = new THREE.Group();
+
+      // PBR Materials matching Figma specifications
+      carbonMat = new THREE.MeshStandardMaterial({
+        color: 0x141819,
+        roughness: 0.25,
+        metalness: 0.85,
+      });
+
+      metalAccentMat = new THREE.MeshStandardMaterial({
+        color: 0x334155,
+        roughness: 0.18,
+        metalness: 0.92,
+      });
+
+      visorMat = new THREE.MeshStandardMaterial({
+        color: 0xc084fc,
+        emissive: 0xc084fc,
+        emissiveIntensity: 1.7,
+        roughness: 0.08,
+        metalness: 0.15,
+        transparent: true,
+        opacity: 0.94,
+      });
+
+      // 1. Helmet Dome (Sculpted Head Shell)
+      const domeGeo = new THREE.SphereGeometry(1.2, 40, 32);
+      domeGeo.scale(0.96, 1.06, 1.16);
+      const domeMesh = new THREE.Mesh(domeGeo, carbonMat);
+      domeMesh.position.set(0, 0.1, 0);
+      helmetGroup.add(domeMesh);
+
+      // 2. Visor (Curved Panoramic Neon Lime Shield)
+      const visorGeo = new THREE.CylinderGeometry(1.06, 1.09, 0.46, 36, 1, true, -Math.PI * 0.42, Math.PI * 0.84);
+      const visorMesh = new THREE.Mesh(visorGeo, visorMat);
+      visorMesh.position.set(0, 0.12, 0.24);
+      helmetGroup.add(visorMesh);
+
+      // 3. Visor Rim Trims (Titanium Torus Accents)
+      const visorTrimGeo = new THREE.TorusGeometry(1.07, 0.032, 16, 32, Math.PI * 0.84);
+      const visorTrimTop = new THREE.Mesh(visorTrimGeo, metalAccentMat);
+      visorTrimTop.rotation.x = Math.PI / 2;
+      visorTrimTop.rotation.z = Math.PI * 0.08;
+      visorTrimTop.position.set(0, 0.35, 0.24);
+      helmetGroup.add(visorTrimTop);
+
+      const visorTrimBottom = new THREE.Mesh(visorTrimGeo, metalAccentMat);
+      visorTrimBottom.rotation.x = Math.PI / 2;
+      visorTrimBottom.rotation.z = Math.PI * 0.08;
+      visorTrimBottom.position.set(0, -0.11, 0.24);
+      helmetGroup.add(visorTrimBottom);
+
+      // 4. Side Audio / Power Canisters with Lime Glow Rings
+      const canGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.24, 32);
+      const ringGeo = new THREE.TorusGeometry(0.36, 0.024, 16, 32);
+      const limeRingMat = new THREE.MeshBasicMaterial({ color: 0xc084fc });
+
+      [-1, 1].forEach((side) => {
+        const can = new THREE.Mesh(canGeo, metalAccentMat);
+        can.rotation.z = Math.PI / 2;
+        can.position.set(side * 1.05, 0.05, -0.05);
+        helmetGroup.add(can);
+
+        const ring = new THREE.Mesh(ringGeo, limeRingMat);
+        ring.rotation.y = Math.PI / 2;
+        ring.position.set(side * 1.18, 0.05, -0.05);
+        helmetGroup.add(ring);
+      });
+
+      // 5. Chin Guard & Tapered Jawpiece
+      const chinGeo = new THREE.BoxGeometry(0.86, 0.44, 0.82);
+      const chinMesh = new THREE.Mesh(chinGeo, carbonMat);
+      chinMesh.position.set(0, -0.66, 0.54);
+      chinMesh.rotation.x = -0.32;
+      helmetGroup.add(chinMesh);
+
+      // 6. Top Aerodynamic Spine / Fin
+      const finGeo = new THREE.BoxGeometry(0.08, 0.2, 1.45);
+      const finMesh = new THREE.Mesh(finGeo, metalAccentMat);
+      finMesh.position.set(0, 1.26, -0.08);
+      helmetGroup.add(finMesh);
+
+      // 7. Base Collar Ring
+      const collarGeo = new THREE.TorusGeometry(0.9, 0.1, 16, 36);
+      const collarMesh = new THREE.Mesh(collarGeo, carbonMat);
+      collarMesh.rotation.x = Math.PI / 2;
+      collarMesh.position.set(0, -1.05, 0);
+      helmetGroup.add(collarMesh);
+
+      // 8. Perspective Wireframe Grid Floor (Matching Figma)
+      const grid = new THREE.GridHelper(8, 16, 0xc084fc, 0x261d33);
+      grid.position.y = -1.35;
+      mainScene.add(grid);
+
+      // 9. Coordinate Ring
+      const orbitRingGeo = new THREE.RingGeometry(2.3, 2.33, 64);
+      const orbitRingMat = new THREE.MeshBasicMaterial({
+        color: 0xc084fc,
+        transparent: true,
+        opacity: 0.25,
+        side: THREE.DoubleSide
+      });
+      const orbitRing = new THREE.Mesh(orbitRingGeo, orbitRingMat);
+      orbitRing.rotation.x = Math.PI / 2;
+      orbitRing.position.y = -0.4;
+      mainScene.add(orbitRing);
+
+      mainScene.add(helmetGroup);
+
+      // Animation Loop
+      function render3D() {
+        requestAnimationFrame(render3D);
+
+        if (autoRotate && helmetGroup) {
+          helmetGroup.rotation.y += 0.006;
+        }
+
+        if (orbitRing) {
+          orbitRing.rotation.z -= 0.002;
+        }
+
+        if (mainControls) mainControls.update();
+
+        if (mainRenderer && mainCamera) mainRenderer.render(mainScene, mainCamera);
+
+        if (inspectorRenderer && inspectorCamera) {
+          inspectorRenderer.render(mainScene, inspectorCamera);
+        }
+      }
+      render3D();
+
+      // Interaction Feedback
+      const hint = document.querySelector('.canvas-3d-hint');
+      mainCanvas.addEventListener('pointerdown', () => {
+        autoRotate = false;
+        if (hint) hint.style.opacity = '0';
+      });
+
+      // Resize Listener
+      window.addEventListener('resize', () => {
+        if (container && mainRenderer && mainCamera) {
+          const width = container.clientWidth;
+          const height = container.clientHeight;
+          if (width > 0 && height > 0) {
+            mainCamera.aspect = width / height;
+            mainCamera.updateProjectionMatrix();
+            mainRenderer.setSize(width, height);
+          }
+        }
+
+        if (inspectorCanvas && inspectorRenderer && inspectorCamera && inspectorCanvas.parentElement) {
+          const p = inspectorCanvas.parentElement;
+          if (p.clientWidth > 0 && p.clientHeight > 0) {
+            inspectorCamera.aspect = p.clientWidth / p.clientHeight;
+            inspectorCamera.updateProjectionMatrix();
+            inspectorRenderer.setSize(p.clientWidth, p.clientHeight);
+          }
+        }
+      });
+
+      // Viewport Control Buttons
+      document.getElementById('btnReset3DCamera')?.addEventListener('click', () => {
+        mainCamera.position.set(0, 0.5, 4.3);
+        if (mainControls) mainControls.target.set(0, 0, 0);
+        helmetGroup.rotation.set(0, 0, 0);
+        autoRotate = true;
+      });
+
+      const toggleWireframe = () => {
+        isWireframe = !isWireframe;
+        [carbonMat, metalAccentMat, visorMat].forEach((m) => {
+          if (m) m.wireframe = isWireframe;
+        });
+        document.getElementById('btnToolWireframe')?.classList.toggle('active', isWireframe);
+        document.getElementById('btnToggle3DWireframe')?.classList.toggle('active', isWireframe);
+      };
+
+      document.getElementById('btnToggle3DWireframe')?.addEventListener('click', toggleWireframe);
+      document.getElementById('btnToolWireframe')?.addEventListener('click', toggleWireframe);
+
+      document.getElementById('btnToolOrbit')?.addEventListener('click', (e) => {
+        autoRotate = !autoRotate;
+        e.currentTarget.classList.toggle('active', autoRotate);
+      });
+
+      let studioLighting = true;
+      document.getElementById('btnToolLighting')?.addEventListener('click', (e) => {
+        studioLighting = !studioLighting;
+        if (keyLight) keyLight.intensity = studioLighting ? 1.4 : 0.4;
+        if (limeRimLight) limeRimLight.intensity = studioLighting ? 2.0 : 3.4;
+        e.currentTarget.classList.toggle('active', studioLighting);
+      });
+
+      document.getElementById('btnToggle3DFullscreen')?.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          container.requestFullscreen?.().catch(() => {});
+        } else {
+          document.exitFullscreen?.().catch(() => {});
+        }
+      });
+    }
+
+    // --- 2. Toast Notifications ---
+    function showToast(message) {
+      const existing = document.querySelector('.aether-toast-notification');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'aether-toast-notification';
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #0e1110;
+        color: #ffffff;
+        border: 1px solid #c084fc;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(192, 132, 252, 0.25);
+        padding: 12px 20px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 99999;
+        animation: fadeIn 0.2s ease-out;
+      `;
+      toast.innerHTML = `<i class="fa-solid fa-cube" style="color: #c084fc; font-size: 15px;"></i> <span>${escapeHtml(message)}</span>`;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 320);
+      }, 3000);
+    }
+
+    // --- 3. Export GLB Buttons ---
+    const handleExport = () => {
+      showToast('Exporting Cybernetic Visor Helmet (.GLB Draco Compressed)... Download started!');
+    };
+    document.getElementById('btnViewportExport')?.addEventListener('click', handleExport);
+    document.getElementById('btnDownloadGLB')?.addEventListener('click', handleExport);
+    document.getElementById('btnTopExport')?.addEventListener('click', handleExport);
+
+    
+    // --- 4. Interactive 3D Engine Inspector Controls ---
+    const inspectorPanel = document.getElementById('inspectorPanel');
+    const btnToggleInspector = document.getElementById('btnToggleInspector');
+    const closeInspectorBtn = document.getElementById('closeInspectorBtn');
+
+    function expandInspector() {
+      inspectorPanel?.classList.remove('collapsed');
+      btnToggleInspector?.classList.add('active');
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 250);
+    }
+
+    function collapseInspector() {
+      inspectorPanel?.classList.add('collapsed');
+      btnToggleInspector?.classList.remove('active');
+      setTimeout(() => window.dispatchEvent(new Event('resize')), 250);
+    }
+
+    btnToggleInspector?.addEventListener('click', () => {
+      if (inspectorPanel?.classList.contains('collapsed')) {
+        expandInspector();
+      } else {
+        collapseInspector();
+      }
+    });
+
+    closeInspectorBtn?.addEventListener('click', collapseInspector);
+
+    // Minimized rail buttons expand the inspector
+    document.getElementById('btnExpandInspector')?.addEventListener('click', expandInspector);
+    document.querySelectorAll('.rail-icon-btn').forEach(btn => {
+      btn.addEventListener('click', expandInspector);
+    });
+
+    // Transform Interactive Inputs -> Live Three.js Model Manipulation
+    function updateModelTransform() {
+      if (!helmetGroup) return;
+      const px = parseFloat(document.getElementById('posX')?.value || 0);
+      const py = parseFloat(document.getElementById('posY')?.value || 0);
+      const pz = parseFloat(document.getElementById('posZ')?.value || 0);
+      helmetGroup.position.set(px, py, pz);
+
+      const rx = parseFloat(document.getElementById('rotX')?.value || 0);
+      const ry = parseFloat(document.getElementById('rotY')?.value || 0);
+      const rz = parseFloat(document.getElementById('rotZ')?.value || 0);
+      helmetGroup.rotation.set((rx * Math.PI) / 180, (ry * Math.PI) / 180, (rz * Math.PI) / 180);
+
+      const sx = parseFloat(document.getElementById('scaleX')?.value || 1);
+      const sy = parseFloat(document.getElementById('scaleY')?.value || 1);
+      const sz = parseFloat(document.getElementById('scaleZ')?.value || 1);
+      helmetGroup.scale.set(sx, sy, sz);
+    }
+
+    let isScaleLinked = true;
+    const btnScaleLink = document.getElementById('btnScaleLink');
+    const scaleLinkIcon = document.getElementById('scaleLinkIcon');
+    if (btnScaleLink && scaleLinkIcon) {
+      btnScaleLink.classList.add('active');
+      scaleLinkIcon.className = 'fa-solid fa-link';
+    }
+
+    btnScaleLink?.addEventListener('click', () => {
+      isScaleLinked = !isScaleLinked;
+      btnScaleLink.classList.toggle('active', isScaleLinked);
+      if (scaleLinkIcon) {
+        scaleLinkIcon.className = isScaleLinked ? 'fa-solid fa-link' : 'fa-solid fa-link-slash';
+      }
+      showToast(isScaleLinked ? 'Transform: Proportional scale locked' : 'Transform: Proportional scale unlocked');
+    });
+
+    ['posX', 'posY', 'posZ', 'rotX', 'rotY', 'rotZ', 'scaleX', 'scaleY', 'scaleZ'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
+        if (isScaleLinked && id.startsWith('scale')) {
+          const val = el.value;
+          ['scaleX', 'scaleY', 'scaleZ'].forEach((sid) => {
+            const sEl = document.getElementById(sid);
+            if (sEl && sEl !== el) sEl.value = val;
+          });
+        }
+        updateModelTransform();
+      });
+    });
+
+    // Inspector Component Collapsible Sections
+    document.querySelectorAll('.comp-collapse-icon').forEach((icon) => {
+      icon.addEventListener('click', () => {
+        const targetId = icon.getAttribute('data-target');
+        const targetBody = document.getElementById(targetId);
+        if (targetBody) {
+          targetBody.classList.toggle('is-hidden');
+          icon.classList.toggle('collapsed-arrow');
+        }
+      });
+    });
+
+    // Lock Inspector Toggle
+    const btnLockInspector = document.getElementById('btnLockInspector');
+    let isInspectorLocked = false;
+    btnLockInspector?.addEventListener('click', () => {
+      isInspectorLocked = !isInspectorLocked;
+      btnLockInspector.classList.toggle('active', isInspectorLocked);
+      const lockIcon = btnLockInspector.querySelector('i');
+      if (lockIcon) {
+        lockIcon.className = isInspectorLocked ? 'fa-solid fa-lock' : 'fa-solid fa-lock-open';
+      }
+      showToast(isInspectorLocked ? 'Inspector: Locked to Breeze Simulation' : 'Inspector: Unlocked');
+    });
+
+    // Script Picker Button
+    document.getElementById('btnScriptPicker')?.addEventListener('click', () => {
+      showToast('Script Asset: BreezeSimulationManager.cs (Active)');
+    });
+
+    // Add Component Button
+    document.getElementById('btnAddEngineComponent')?.addEventListener('click', () => {
+      showToast('Add Component: Physics, Audio, Mesh, and WebXR components available');
+    });
+
+    // --- 5. Code Snippet Copy ---
+    document.getElementById('btnCopySnippet')?.addEventListener('click', (e) => {
+      const codeEl = document.querySelector('.code-pre code');
+      if (codeEl) {
+        navigator.clipboard.writeText(codeEl.innerText);
+        const btn = e.currentTarget;
+        btn.innerHTML = '<i class="fa-solid fa-check" style="color: #c084fc;"></i> <span>Copied!</span>';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-regular fa-copy"></i> <span>Copy Code</span>';
+        }, 2000);
+      }
+    });
+
+    // --- 6. Prompt Suggestion Chips ---
+    document.querySelectorAll('.suggestion-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const prompt = chip.getAttribute('data-prompt');
+        if (prompt && promptInput) {
+          promptInput.value = prompt;
+          promptInput.dispatchEvent(new Event('input'));
+          handleSend(prompt);
+        }
+      });
+    });
+
+    // --- 7. Global Keyboard Shortcut: Ctrl+K / Cmd+K ---
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        startNewChat();
+      }
+    });
+
+    // --- 8. File Attachment Trigger ---
+    const btnAttachPrompt = document.getElementById('btnAttachPrompt');
+    const promptAttachmentInput = document.getElementById('promptAttachmentInput');
+    btnAttachPrompt?.addEventListener('click', () => {
+      promptAttachmentInput?.click();
+    });
+    promptAttachmentInput?.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        showToast(`Asset attached: ${file.name}`);
+        if (promptInput) {
+          promptInput.value += ` [Attached 3D Asset: ${file.name}]`;
+          promptInput.dispatchEvent(new Event('input'));
+          promptInput.focus();
+        }
+      }
+    });
+
+    // --- 9. Pre-populate Sample Recent Chats if Storage Empty ---
+    const existingSessions = getStoredSessions();
+    if (existingSessions.length === 0) {
+      const sampleSessions = [
+        { id: 'session_cyber_helmet', title: 'Cyber Helmet v2', engine: 'gemini', updatedAt: Date.now() },
+        { id: 'session_scifi_corridor', title: 'Sci-Fi Corridor PBR', engine: 'gemini', updatedAt: Date.now() - 3600000 },
+        { id: 'session_lowpoly_island', title: 'Low-Poly Island Asset', engine: 'luma', updatedAt: Date.now() - 7200000 },
+        { id: 'session_threejs_shader', title: 'Three.js Shader Config', engine: 'gemini', updatedAt: Date.now() - 86400000 },
+      ];
+      saveStoredSessions(sampleSessions);
+      renderChatHistoryList();
+    }
+
+    // Initialize 3D Scene
+    init3DScene();
+  }
+
   // Initial Setup
   if (lumaModelSelect) {
     lumaModelSelect.value = getActiveLumaModel();
@@ -1743,4 +2538,6 @@ Your responsibilities:
   setEngine('gemini');
   renderChatHistoryList();
   initVisualStudio();
+  loadUserProfile();
+  initFigmaWorkspaceUI();
 });
