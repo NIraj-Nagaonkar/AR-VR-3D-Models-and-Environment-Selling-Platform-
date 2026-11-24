@@ -411,6 +411,11 @@ async function runTests() {
   console.log(`  Total Failed:  ❌ ${failed}`);
   console.log(`══════════════════════════════════════════════════════════`);
 
+  const mongoose = require("mongoose");
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+
   if (failed > 0) {
     console.log("\n❌ Failed Tests:");
     failures.forEach((f, idx) => {

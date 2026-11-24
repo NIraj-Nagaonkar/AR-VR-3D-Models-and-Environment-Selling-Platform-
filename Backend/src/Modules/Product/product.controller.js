@@ -51,7 +51,7 @@ const createProduct = async (req, res, next) => {
 const updateProduct = async (req, res, next) => {
   try {
     delete req.body.createdBy; // prevent overwrite
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { returnDocument: "after", runValidators: true });
     if (!product) return res.status(404).json({ success: false, code: "NOT_FOUND", message: "Product not found" });
     res.json({ success: true, message: "Product updated", product });
   } catch (err) { next(err); }

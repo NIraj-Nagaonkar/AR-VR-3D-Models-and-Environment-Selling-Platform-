@@ -75,7 +75,7 @@ const updateRequestStatus = async (req, res, next) => {
     if (adminNote   !== undefined) update.adminNote   = adminNote;
     if (quotedPrice !== undefined) update.quotedPrice = quotedPrice;
 
-    const request = await Request.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).populate("user", "name email");
+    const request = await Request.findByIdAndUpdate(req.params.id, update, { returnDocument: "after", runValidators: true }).populate("user", "name email");
     if (!request) {
       return res.status(404).json({ success: false, code: "NOT_FOUND", message: "Request not found" });
     }

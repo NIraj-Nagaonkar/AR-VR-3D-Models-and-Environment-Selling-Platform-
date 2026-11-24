@@ -139,6 +139,11 @@ app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Ather3D API is running", timestamp: new Date().toISOString() });
 });
 
+// ── 404 for unhandled API requests ──────────────────────────────────────────
+app.all("/api/*", (req, res) => {
+  res.status(404).json({ success: false, code: "NOT_FOUND", message: `API route ${req.method} ${req.originalUrl} not found` });
+});
+
 // ── Global error handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
 

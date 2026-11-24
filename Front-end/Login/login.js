@@ -26,7 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showAlert(message, type = 'error') {
     authAlert.className = `auth-alert ${type}`;
-    authAlert.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${message}</span>`;
+    authAlert.innerHTML = '';
+    const icon = document.createElement('i');
+    icon.className = `fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}`;
+    const span = document.createElement('span');
+    span.textContent = message;
+    authAlert.appendChild(icon);
+    authAlert.appendChild(span);
     authAlert.style.display = 'flex';
   }
   function clearAlert() { authAlert.style.display = 'none'; }
