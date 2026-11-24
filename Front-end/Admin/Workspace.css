@@ -678,6 +678,13 @@ html, body {
   border-color: #cbd5e1;
 }
 
+#btnDownloadGLB:hover,
+#btnOpenWebXRStudio:hover {
+  background: #f0f9ff;
+  border-color: #38bdf8;
+  color: #0284c7;
+}
+
 .btn-toggle-inspector {
   width: 34px;
   height: 34px;

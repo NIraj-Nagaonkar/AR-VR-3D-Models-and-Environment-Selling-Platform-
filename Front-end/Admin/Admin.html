@@ -190,20 +190,20 @@
     <div class="modal-overlay" id="settingsModal">
         <div class="modal-content-box settings-modal-box">
             <div class="modal-header">
-                <h3><i class="fa-solid fa-gear"></i> Settings &amp; Preferences</h3>
+                <h3><i class="fa-solid fa-user-shield"></i> Administrator Account &amp; System</h3>
                 <button class="close-drawer-btn" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <!-- Settings Navigation Tabs -->
             <div class="settings-nav-tabs">
                 <button type="button" class="settings-tab-btn active" id="tabBtnProfile" onclick="switchSettingsTab('profile')">
-                    <i class="fa-solid fa-user-gear"></i> Profile
+                    <i class="fa-solid fa-user-gear"></i> Account Profile
                 </button>
                 <button type="button" class="settings-tab-btn" id="tabBtnSession" onclick="switchSettingsTab('session')">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Session &amp; Logs
+                    <i class="fa-solid fa-server"></i> System &amp; Session
                 </button>
                 <button type="button" class="settings-tab-btn" id="tabBtnSecurity" onclick="switchSettingsTab('security')">
-                    <i class="fa-solid fa-shield-halved"></i> Security &amp; Privacy
+                    <i class="fa-solid fa-shield-halved"></i> Security &amp; Access
                 </button>
             </div>
 
@@ -211,36 +211,55 @@
             <div class="settings-panel active" id="panelProfile">
                 <form onsubmit="saveProfile(event)">
                     <div class="modal-body">
-                        <div class="profile-header-card">
-                            <div class="profile-avatar-circle">
-                                <span>NN</span>
+                        <!-- Hero Profile Banner Card -->
+                        <div class="admin-hero-card">
+                            <div class="admin-hero-avatar-wrap">
+                                <div class="admin-hero-avatar" id="adminModalAvatar">AD</div>
+                                <span class="admin-online-dot" title="Authenticated Session"></span>
                             </div>
-                            <div class="profile-header-info">
-                                <h4>Niraj Nagaonkar</h4>
-                                <span class="profile-role-badge"><i class="fa-solid fa-shield-halved"></i> Lead Spatial Administrator</span>
+                            <div class="admin-hero-meta">
+                                <div class="admin-hero-title-row">
+                                    <h4 id="adminModalNameDisplay">Admin</h4>
+                                    <span class="admin-verified-tag"><i class="fa-solid fa-circle-check"></i> Verified Admin</span>
+                                </div>
+                                <span class="admin-hero-email" id="adminModalEmailDisplay">ather3dadmin@gmail.com</span>
+                                <div class="admin-hero-badges">
+                                    <span class="admin-badge-pill"><i class="fa-solid fa-key"></i> Full RBAC Level 1</span>
+                                    <span class="admin-badge-pill"><i class="fa-solid fa-clock"></i> 8-Hour JWT Session</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="modal-group">
-                            <label for="profileName">Full Name</label>
-                            <input type="text" id="profileName" value="Niraj Nagaonkar" required>
-                        </div>
-                        <div class="modal-group">
-                            <label for="profileEmail">Work Email Address</label>
-                            <input type="email" id="profileEmail" value="niraj@aether3d.dev" required>
-                        </div>
-                        <div class="modal-group">
-                            <label for="profileRole">Administrative Role</label>
-                            <input type="text" id="profileRole" value="Lead Spatial Administrator" disabled>
-                        </div>
-                        <div class="modal-group">
-                            <label for="profileOrg">Organization / Studio</label>
-                            <input type="text" id="profileOrg" value="Aether3D Studio Systems">
+                        <!-- Editable Profile Details -->
+                        <div class="admin-form-section">
+                            <h5 class="form-section-title"><i class="fa-solid fa-id-card"></i> Account Information</h5>
+                            <div class="admin-form-grid">
+                                <div class="modal-group">
+                                    <label for="profileName">Full Display Name</label>
+                                    <input type="text" id="profileName" value="Admin" required>
+                                </div>
+                                <div class="modal-group">
+                                    <label for="profileEmail">Work Email Address</label>
+                                    <input type="email" id="profileEmail" value="ather3dadmin@gmail.com" required>
+                                </div>
+                                <div class="modal-group">
+                                    <label for="profileRole">Platform Role</label>
+                                    <input type="text" id="profileRole" value="Lead Spatial Administrator" disabled>
+                                </div>
+                                <div class="modal-group">
+                                    <label for="profileOrg">Organization / Studio</label>
+                                    <input type="text" id="profileOrg" value="Aether3D Studio Systems">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="logoutAdmin()">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                        </button>
+                        <div style="flex: 1;"></div>
                         <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('settingsModal')">Close</button>
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i> Save Profile</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i> Save Changes</button>
                     </div>
                 </form>
             </div>

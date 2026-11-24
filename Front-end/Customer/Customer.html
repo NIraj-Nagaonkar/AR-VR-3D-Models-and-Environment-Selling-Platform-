@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aether3D - AR/VR Models</title>
     <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../shared/tokens.css">
     <link rel="stylesheet" href="Customer.css">
     <!-- JS as ES module so imports work -->
@@ -26,10 +27,68 @@
                 <a href="#request-model">Request A Model</a>
                 <a href="#environment">Environment</a>
                 <a href="#about">About Us</a>
+                <a href="#my-requests" class="mobile-only-link"><i class="fa-solid fa-list-check"></i> My Requests</a>
+                <a href="#" data-action="logout" class="mobile-only-link mobile-logout-link"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</a>
             </nav>
             <div class="nav-actions">
-                <a href="#" class="lang-toggle">EN | India</a>
-                <button class="btn">Contact Us</button>
+                <a href="#about" class="lang-toggle">About</a>
+
+                <!-- Account Profile Menu -->
+                <div class="user-account-menu" id="userAccountMenu">
+                    <button type="button" class="account-menu-btn" id="accountMenuBtn" aria-haspopup="true" aria-expanded="false" title="Account & Profile">
+                        <div class="user-avatar-badge" id="nav-user-initial">C</div>
+                        <span class="nav-user-name" id="nav-user-name">Account</span>
+                        <i class="fa-solid fa-chevron-down account-caret"></i>
+                    </button>
+
+                    <div class="account-dropdown-card" id="accountDropdownCard">
+                        <div class="account-card-header">
+                            <div class="card-avatar-lg" id="cardUserInitial">C</div>
+                            <div class="card-user-info">
+                                <h4 id="cardUserName">Customer</h4>
+                                <span class="card-user-email" id="cardUserEmail">customer@ather3d.com</span>
+                                <span class="card-user-role-badge" id="cardUserRole"><i class="fa-solid fa-circle-check"></i> Customer Account</span>
+                            </div>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <div class="dropdown-menu-links">
+                            <a href="#my-requests" class="dropdown-item" id="accountMenuMyRequests">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <div class="item-text">
+                                    <strong>My Requests</strong>
+                                    <span>Track your submitted models</span>
+                                </div>
+                            </a>
+                            <a href="#request-model" class="dropdown-item" id="accountMenuNewRequest">
+                                <i class="fa-solid fa-plus-circle"></i>
+                                <div class="item-text">
+                                    <strong>Request A Model</strong>
+                                    <span>Send blueprints or CAD files</span>
+                                </div>
+                            </a>
+                            <a href="/Admin/Admin.html" class="dropdown-item admin-only-item" id="accountMenuAdminLink" style="display: none;">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <div class="item-text">
+                                    <strong>Admin Panel</strong>
+                                    <span>Switch to Administrator</span>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="dropdown-divider"></div>
+
+                        <div class="dropdown-footer">
+                            <button type="button" class="btn-dropdown-logout" data-action="logout">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span>Sign Out</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-request-cta" onclick="document.getElementById('request-model')?.scrollIntoView({behavior: 'smooth'})">Request 3D</button>
             </div>
         </div>
     </header>

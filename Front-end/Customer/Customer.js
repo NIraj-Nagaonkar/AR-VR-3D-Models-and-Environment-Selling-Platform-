@@ -33,9 +33,85 @@ if (mobileMenuBtn && navLinks) {
   });
 }
 
-// ── Inject user name into nav if element exists ──────────────────────
-const navUser = document.getElementById('nav-user-name');
-if (navUser) { const u = getUser(); navUser.textContent = u?.name || 'Customer'; }
+// ── User Account Menu & Profile Dropdown ────────────────────────────
+function initUserAccount() {
+  const u = getUser();
+  const userName  = u?.name || 'Customer';
+  const userEmail = u?.email || '';
+  const userRole  = u?.role === 'admin' ? 'Administrator' : 'Customer Account';
+  
+  // Compute initials (e.g. "Niraj Nagaonkar" -> "NN" or "N")
+  let initials = 'U';
+  if (userName) {
+    const parts = userName.trim().split(/\s+/);
+    initials = parts.length > 1
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0][0].toUpperCase();
+  }
+
+  // Header Nav button
+  const navUserInitial = document.getElementById('nav-user-initial');
+  const navUserName    = document.getElementById('nav-user-name');
+  if (navUserInitial) navUserInitial.textContent = initials;
+  if (navUserName)    navUserName.textContent    = userName;
+
+  // Dropdown card details
+  const cardUserInitial = document.getElementById('cardUserInitial');
+  const cardUserName    = document.getElementById('cardUserName');
+  const cardUserEmail   = document.getElementById('cardUserEmail');
+  const cardUserRole    = document.getElementById('cardUserRole');
+  const adminLink       = document.getElementById('accountMenuAdminLink');
+
+  if (cardUserInitial) cardUserInitial.textContent = initials;
+  if (cardUserName)    cardUserName.textContent    = userName;
+  if (cardUserEmail)   cardUserEmail.textContent   = userEmail || 'Active Session';
+  if (cardUserRole) {
+    cardUserRole.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${escapeHtml(userRole)}`;
+  }
+
+  // Show Admin link if user is administrator
+  if (u?.role === 'admin' && adminLink) {
+    adminLink.style.display = 'flex';
+  }
+
+  // Dropdown toggle logic
+  const menuBtn  = document.getElementById('accountMenuBtn');
+  const menuCard = document.getElementById('accountDropdownCard');
+
+  if (menuBtn && menuCard) {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = menuCard.classList.toggle('open');
+      menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!menuCard.contains(e.target) && !menuBtn.contains(e.target)) {
+        menuCard.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menuCard.classList.contains('open')) {
+        menuCard.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close menu when clicking internal anchor links
+    menuCard.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        menuCard.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+}
+
+initUserAccount();
 
 // ── Logout button ───────────────────────────────────────────────────
 document.querySelectorAll('[data-action="logout"]').forEach(el => {

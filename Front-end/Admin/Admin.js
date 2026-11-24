@@ -30,7 +30,7 @@ renderer.setPixelRatio(window.devicePixelRatio);
 // Geometry: Rotating Wireframe Icosahedron
 const geometry = new THREE.IcosahedronGeometry(3, 2);
 const material = new THREE.MeshBasicMaterial({
-    color: 0xC084FC,
+    color: 0x38BDF8,
     wireframe: true,
     transparent: true,
     opacity: 0.35
@@ -184,8 +184,53 @@ function visitWorkSpace() {
     window.location.href = 'Workspace.html';
 }
 
+function loadAdminProfileData() {
+    try {
+        const session = JSON.parse(localStorage.getItem('ather_session') || '{}');
+        const user = session.user || {};
+        const adminName = user.name || 'Admin';
+        const adminEmail = user.email || 'ather3dadmin@gmail.com';
+
+        // Compute initials (e.g. "Admin" -> "AD", "Niraj Nagaonkar" -> "NN")
+        let initials = 'AD';
+        if (adminName) {
+            const parts = adminName.trim().split(/\s+/);
+            initials = parts.length > 1
+                ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+                : (adminName.length > 1 ? adminName.substring(0, 2).toUpperCase() : adminName[0].toUpperCase());
+        }
+
+        // Top nav header pill
+        const navAvatar = document.getElementById('navAdminAvatar');
+        const navName = document.getElementById('navAdminName');
+        if (navAvatar) navAvatar.textContent = initials;
+        if (navName) navName.textContent = adminName;
+
+        // Modal hero card
+        const modalAvatar = document.getElementById('adminModalAvatar');
+        const modalNameDisplay = document.getElementById('adminModalNameDisplay');
+        const modalEmailDisplay = document.getElementById('adminModalEmailDisplay');
+        if (modalAvatar) modalAvatar.textContent = initials;
+        if (modalNameDisplay) modalNameDisplay.textContent = adminName;
+        if (modalEmailDisplay) modalEmailDisplay.textContent = adminEmail;
+
+        // Form inputs
+        const profileNameInput = document.getElementById('profileName');
+        const profileEmailInput = document.getElementById('profileEmail');
+        if (profileNameInput && !profileNameInput.matches(':focus')) {
+            profileNameInput.value = adminName;
+        }
+        if (profileEmailInput && !profileEmailInput.matches(':focus')) {
+            profileEmailInput.value = adminEmail;
+        }
+    } catch (e) {
+        console.warn('Could not load admin profile data', e);
+    }
+}
+
 function openSettingsModal(tabKey = 'profile') {
     closeMenuDropdown();
+    loadAdminProfileData();
     switchSettingsTab(tabKey);
     const modal = document.getElementById('settingsModal');
     if (modal) modal.style.display = 'flex';
@@ -204,8 +249,21 @@ function switchSettingsTab(tabKey) {
 
 function saveProfile(event) {
     event.preventDefault();
-    showAdminToast('Admin profile settings updated successfully!', 'success');
-    closeModal('settingsModal');
+    try {
+        const newName = document.getElementById('profileName')?.value.trim();
+        if (newName) {
+            const session = JSON.parse(localStorage.getItem('ather_session') || '{}');
+            if (session.user) {
+                session.user.name = newName;
+                localStorage.setItem('ather_session', JSON.stringify(session));
+            }
+        }
+        loadAdminProfileData();
+        showAdminToast('Admin profile updated successfully!', 'success');
+        closeModal('settingsModal');
+    } catch (e) {
+        showAdminToast('Failed to save profile changes.', 'error');
+    }
 }
 
 function saveSecurityPrivacy(event) {
@@ -658,5 +716,8 @@ async function loadRequestsFromServer() {
     }
 }
 
-// Load real requests as soon as the admin page opens
-document.addEventListener('DOMContentLoaded', loadRequestsFromServer);
+// Initialize admin profile and load real requests on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadAdminProfileData();
+    loadRequestsFromServer();
+});

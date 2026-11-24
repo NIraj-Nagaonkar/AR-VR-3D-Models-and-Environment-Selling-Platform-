@@ -2351,6 +2351,24 @@ Your responsibilities:
     document.getElementById('btnDownloadGLB')?.addEventListener('click', handleExport);
     document.getElementById('btnTopExport')?.addEventListener('click', handleExport);
 
+    document.getElementById('btnOpenWebXRStudio')?.addEventListener('click', () => {
+      const viewStudio = document.getElementById('viewStudioPane');
+      const viewChat = document.getElementById('viewChatPane');
+      if (viewStudio && viewChat) {
+        if (viewStudio.classList.contains('active')) {
+          viewStudio.classList.remove('active');
+          viewChat.classList.add('active');
+          showToast('Returned to AI Spatial Chat', 'info');
+        } else {
+          viewChat.classList.remove('active');
+          viewStudio.classList.add('active');
+          showToast('Switched to 3D Visual Studio & WebXR View', 'success');
+        }
+      } else {
+        showToast('3D WebXR Studio Engine Active', 'info');
+      }
+    });
+
     
     // --- 4. Interactive 3D Engine Inspector Controls ---
     const inspectorPanel = document.getElementById('inspectorPanel');
