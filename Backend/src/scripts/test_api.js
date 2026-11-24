@@ -99,7 +99,7 @@ async function run() {
   {
     // Valid admin login
     const rAdmin = await req("POST", "/users/login", {
-      body: { email: "ather3dadmin@gmail.com", password: "Ather3D@Admin2026" }
+      body: { email: process.env.ADMIN_EMAIL || "admin@example.com", password: process.env.ADMIN_PASSWORD || "changeme" }
     });
     if (rAdmin.status === 200 && rAdmin.data.token && rAdmin.data.user?.role === "admin") {
       adminToken = rAdmin.data.token;
@@ -110,7 +110,7 @@ async function run() {
 
     // Wrong password
     const r2 = await req("POST", "/users/login", {
-      body: { email: "ather3dadmin@gmail.com", password: "wrongpass" }
+      body: { email: process.env.ADMIN_EMAIL || "admin@example.com", password: "wrongpass" }
     });
     r2.status === 401 && r2.data.code === "AUTH_REQUIRED"
       ? pass("Login wrong password → 401 AUTH_REQUIRED")
