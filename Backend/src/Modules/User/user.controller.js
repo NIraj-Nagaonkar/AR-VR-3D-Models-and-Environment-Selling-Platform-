@@ -120,11 +120,13 @@ const forgotPassword = async (req, res, next) => {
     const baseUrl  = (process.env.APP_URL || "http://localhost:5000").replace(/\/+$/, "");
     const resetUrl  = `${baseUrl}/Login/reset-password.html?token=${rawToken}`;
 
-    // Log to server console (no email service configured)
-    console.log("\n========== PASSWORD RESET LINK ==========");
-    console.log(`User : ${user.email}`);
-    console.log(`Link : ${resetUrl}`);
-    console.log("=========================================\n");
+    // Log to server console only in development (no email service configured)
+    if (process.env.NODE_ENV === "development") {
+      console.log("\n========== PASSWORD RESET LINK (DEV) ==========");
+      console.log(`User : ${user.email}`);
+      console.log(`Link : ${resetUrl}`);
+      console.log("===============================================\n");
+    }
 
     const responsePayload = { success: true, message: "If that email is registered you will receive a reset link." };
 

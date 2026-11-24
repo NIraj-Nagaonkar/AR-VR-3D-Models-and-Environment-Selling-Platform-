@@ -1,9 +1,8 @@
 /**
  * Front-end/Login/login.js
- * Uses shared api.js + auth.js — relative URLs only, no localhost hardcoding.
+ * Uses shared auth.js — relative URLs only, no localhost hardcoding.
  */
 import { saveSession } from '../shared/auth.js';
-import { showToast }   from '../shared/ui/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm       = document.getElementById('loginForm');

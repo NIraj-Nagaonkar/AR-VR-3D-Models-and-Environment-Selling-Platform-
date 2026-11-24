@@ -1322,7 +1322,7 @@ Your responsibilities:
     }
 
     if (lumaStatusBadge) {
-      lumaStatusBadge.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles" style="font-size: 8px; color: #c084fc; margin-right: 5px;"></i>Luma Ready`;
+      lumaStatusBadge.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles" style="font-size: 8px; color: #38bdf8; margin-right: 5px;"></i>Luma Ready`;
     }
 
     closeSettingsModal();
