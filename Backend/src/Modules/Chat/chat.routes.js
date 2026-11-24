@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate, requireRole } = require('../../middleware/authenticate');
+
+// All chat routes require a valid admin session — they use the server's paid AI keys
+router.use(authenticate, requireRole('admin'));
 
 router.post('/', async (req, res) => {
   try {
@@ -277,8 +281,16 @@ router.post('/analyze-image', async (req, res) => {
 
 /**
  * @route   POST /api/chat/proxy-image
- * @desc    Convert external image URL to base64 to avoid CORS when inspecting generated images
+ * @desc    Fetch an external Luma CDN image and return it as base64.
+ *          SSRF-hardened: only Luma CDN hostnames are allowed; private IP ranges are blocked.
  */
+const ALLOWED_IMAGE_HOSTS = new Set([
+  'storage.cdn-luma.com',
+  'cdn.lumalabs.ai',
+  'assets.lumalabs.ai',
+  'storage.lumalabs.ai',
+]);
+
 router.post('/proxy-image', async (req, res) => {
   try {
     const { url } = req.body;
@@ -286,21 +298,36 @@ router.post('/proxy-image', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Valid image URL is required' });
     }
 
-    const response = await fetch(url);
+    let parsed;
+    try { parsed = new URL(url); } catch {
+      return res.status(400).json({ success: false, message: 'Invalid URL' });
+    }
+
+    // Allow-list: only known Luma CDN domains
+    if (!ALLOWED_IMAGE_HOSTS.has(parsed.hostname)) {
+      return res.status(403).json({ success: false, message: 'URL hostname is not allowed' });
+    }
+
+    // Block private/loopback IP ranges
+    const privatePat = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|169\.254\.|::1$|fc|fd)/i;
+    if (privatePat.test(parsed.hostname)) {
+      return res.status(403).json({ success: false, message: 'Private IP ranges are not allowed' });
+    }
+
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!response.ok) {
       return res.status(response.status).json({ success: false, message: `Failed to fetch image: HTTP ${response.status}` });
     }
 
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.startsWith('image/')) {
+      return res.status(415).json({ success: false, message: 'Remote resource is not an image' });
+    }
+
     const arrayBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/png';
     const base64 = Buffer.from(arrayBuffer).toString('base64');
 
-    res.json({
-      success: true,
-      dataUrl: `data:${contentType};base64,${base64}`,
-      base64,
-      contentType
-    });
+    res.json({ success: true, dataUrl: `data:${contentType};base64,${base64}`, base64, contentType });
   } catch (err) {
     console.error('Image proxy error:', err);
     res.status(500).json({ success: false, message: err.message });

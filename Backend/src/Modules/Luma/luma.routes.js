@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate, requireRole } = require('../../middleware/authenticate');
 
-// Helper to retrieve active Luma API Key
-function getLumaKey(req) {
-  return (
-    req.headers['x-luma-key'] ||
-    process.env.LUMA_API_KEY ||
-    process.env['Luma  API Key'] ||
-    ''
-  ).trim();
+// All Luma routes require admin — they use the server's paid AI keys
+router.use(authenticate, requireRole('admin'));
+
+// Helper to retrieve active Luma API Key — only from server env, never from client headers
+function getLumaKey() {
+  return (process.env.LUMA_API_KEY || '').trim();
 }
 
 /**
@@ -17,7 +16,7 @@ function getLumaKey(req) {
  */
 router.get('/status', async (req, res) => {
   try {
-    const apiKey = getLumaKey(req);
+    const apiKey = getLumaKey();
 
     if (!apiKey) {
       return res.status(200).json({
@@ -68,7 +67,7 @@ router.get('/status', async (req, res) => {
  */
 router.post('/generations', async (req, res) => {
   try {
-    const apiKey = getLumaKey(req);
+    const apiKey = getLumaKey();
 
     if (!apiKey) {
       return res.status(500).json({
@@ -141,7 +140,7 @@ router.post('/generations', async (req, res) => {
  */
 router.get('/generations/:id', async (req, res) => {
   try {
-    const apiKey = getLumaKey(req);
+    const apiKey = getLumaKey();
     const generationId = req.params.id;
 
     if (!apiKey) {

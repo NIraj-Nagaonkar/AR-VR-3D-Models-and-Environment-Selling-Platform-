@@ -14,10 +14,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    // select:false — password never leaks through a stray .find() call
     password: {
       type: String,
       required: [true, "Password is required"],
       minlength: 6,
+      select: false,
     },
     role: {
       type: String,

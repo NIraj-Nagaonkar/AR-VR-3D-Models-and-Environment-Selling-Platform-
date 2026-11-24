@@ -1,5 +1,25 @@
 // Admin.js
+
+// ── Auth guard (non-module: read localStorage directly) ──────────────────────
+(function adminAuthGuard() {
+    try {
+        const session = JSON.parse(localStorage.getItem('ather_session') || '{}');
+        if (!session.token) {
+            const next = encodeURIComponent(window.location.pathname);
+            window.location.replace('/Login/login.html?next=' + next);
+            return;
+        }
+        if (session.user && session.user.role !== 'admin') {
+            window.location.replace('/Customer/Customer.html');
+        }
+    } catch (e) {
+        window.location.replace('/Login/login.html');
+    }
+})();
+
 // --- Three.js Background Wireframe Grid System ---
+// Wrapped in try/catch — if CDN fails the rest of the page still works
+try {
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('hero-canvas'), alpha: true, antialias: true });
@@ -47,29 +67,28 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
+} catch (threeErr) {
+    console.warn('Three.js canvas not available:', threeErr.message);
+}
 
 // --- Portfolio Filter Functionality ---
-function filterAssets(category) {
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    
-    if (window.event && window.event.target) {
-        window.event.target.classList.add('active');
+function filterAssets(category, clickedBtn) {
+    // Update active tab button
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
     } else {
-        buttons.forEach(btn => {
-            if (btn.getAttribute('onclick')?.includes(category)) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            if (btn.getAttribute('onclick')?.includes("'" + category + "'")) {
                 btn.classList.add('active');
             }
         });
     }
 
-    const cards = document.querySelectorAll('.asset-card');
-    cards.forEach(card => {
-        if (category === 'all' || card.getAttribute('data-category') === category) {
-            card.style.display = 'flex';
-        } else {
-            card.style.display = 'none';
-        }
+    // Show/hide cards
+    document.querySelectorAll('.asset-card').forEach(card => {
+        const match = category === 'all' || card.getAttribute('data-category') === category;
+        card.style.display = match ? 'flex' : 'none';
     });
 }
 
@@ -136,7 +155,7 @@ function showNotifications() {
 
 function visitClientDashboard() {
     closeMenuDropdown();
-    window.location.href = '../../Front-end/Customer/Customer.html';
+    window.location.href = '/Customer/Customer.html';
 }   
 
 function visitWorkSpace() {
@@ -187,9 +206,8 @@ function clearSessionLogs() {
 
 function logoutAdmin() {
     if (confirm('Are you sure you want to end your administrator session and log out?')) {
-        sessionStorage.clear();
-        localStorage.clear();
-        window.location.href = '../Login/login.html';
+        localStorage.removeItem('ather_session');
+        window.location.href = '/Login/login.html';
     }
 }
 
@@ -264,29 +282,30 @@ async function handleQueueAction(buttonElement, decision) {
     // Update backend first (if this row came from the database)
     if (mongoId) {
         try {
-            let response;
-            try {
-                response = await fetch(`http://localhost:5000/api/requests/${mongoId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus }),
-                });
-            } catch (err) {
-                response = await fetch(`http://127.0.0.1:5000/api/requests/${mongoId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus }),
-                });
-            }
+            const session = JSON.parse(localStorage.getItem('ather_session') || '{}');
+            const token   = session.token || '';
+            const response = await fetch(`/api/requests/${mongoId}/status`, {
+                method:  'PATCH',
+                headers: {
+                    'Content-Type':  'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
 
             const data = await response.json();
             if (!data.success) {
-                alert('Could not update status: ' + (data.message || 'Server error'));
+                // Show inline error without blocking alert()
+                console.error('Status update failed:', data.message);
+                const toast = document.createElement('div');
+                toast.textContent = 'Could not update status: ' + (data.message || 'Server error');
+                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#DC2626;color:#fff;padding:12px 18px;border-radius:8px;z-index:9999;font-family:Montserrat,sans-serif';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 4000);
                 buttons.forEach(b => b.disabled = false);
                 return;
             }
         } catch (error) {
-            alert('Could not reach the server to update status.');
             console.error('Status update error:', error);
             buttons.forEach(b => b.disabled = false);
             return;
@@ -452,8 +471,8 @@ function openRequestDetails(mongoId) {
     // Populate Client Sent File
     const fileContainer = document.getElementById('detailFileContainer');
     if (fileContainer) {
-        if (req.fileName && req.filePath) {
-            const fileUrl = getClientFileUrl(req.filePath);
+        if (req.fileName && req.fileKey) {
+            const fileUrl = getClientFileUrl(req.fileKey);
             const iconClass = getFileIconClass(req.fileName);
             fileContainer.innerHTML = `
                 <div class="file-preview-card">
@@ -528,12 +547,42 @@ async function loadRequestsFromServer() {
     const tbody = document.getElementById('queueTableBody');
     const counter = document.getElementById('queueCounter');
 
+    // Show loading state
+    if (counter) counter.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading requests...';
+    if (tbody) tbody.innerHTML = `
+        <tr><td colspan="8" class="empty-queue-row">
+            <div class="empty-queue-content">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>Loading incoming requests...</span>
+            </div>
+        </td></tr>`;
+
     try {
-        let response;
-        try {
-            response = await fetch('http://localhost:5000/api/requests');
-        } catch (err) {
-            response = await fetch('http://127.0.0.1:5000/api/requests');
+        const session = JSON.parse(localStorage.getItem('ather_session') || '{}');
+        const token   = session.token || '';
+
+        if (!token) {
+            window.location.replace('/Login/login.html?next=' + encodeURIComponent(window.location.pathname));
+            return;
+        }
+
+        const response = await fetch('/api/requests', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        // Session expired — show message and redirect
+        if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('ather_session');
+            if (counter) counter.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Session expired';
+            if (tbody) tbody.innerHTML = `
+                <tr><td colspan="8" class="empty-queue-row">
+                    <div class="empty-queue-content">
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Session expired. <a href="/Login/login.html" style="color:var(--primary-purple)">Please log in again.</a></span>
+                    </div>
+                </td></tr>`;
+            setTimeout(() => window.location.replace('/Login/login.html'), 2500);
+            return;
         }
 
         const data = await response.json();
@@ -579,7 +628,7 @@ async function loadRequestsFromServer() {
                 req._id,
                 req.workEmail || '',
                 req.fileName || '',
-                req.filePath || ''
+                req.fileKey  || ''
             );
         });
     } catch (error) {
