@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const User = require("./user.model");
 
 const generateToken = (user) =>
@@ -91,4 +92,89 @@ const getMe = async (req, res) => {
   res.json({ success: true, user: req.user });
 };
 
-module.exports = { signup, login, getMe };
+// ── Forgot Password ───────────────────────────────────────────────────────────
+// @route  POST /api/users/forgot-password
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, code: "VALIDATION_FAILED", message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+
+    // Always respond generically — don't leak whether the email is registered
+    if (!user) {
+      return res.json({ success: true, message: "If that email is registered you will receive a reset link." });
+    }
+
+    // Generate a raw token and store its SHA-256 hash (never store plain token)
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+    user.passwordResetToken   = hashedToken;
+    user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save({ validateBeforeSave: false });
+
+    // Build reset URL — raw token goes in the URL, hashed token stays in DB
+    const protocol  = req.protocol;
+    const host      = req.get("host");
+    const resetUrl  = `${protocol}://${host}/Login/reset-password.html?token=${rawToken}`;
+
+    // Log to server console (no email service configured)
+    console.log("\n========== PASSWORD RESET LINK ==========");
+    console.log(`User : ${user.email}`);
+    console.log(`Link : ${resetUrl}`);
+    console.log("=========================================\n");
+
+    const responsePayload = { success: true, message: "If that email is registered you will receive a reset link." };
+
+    // In development expose the link so it can be used without an email service
+    if (process.env.NODE_ENV !== "production") {
+      responsePayload.devResetUrl = resetUrl;
+    }
+
+    res.json(responsePayload);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── Reset Password ────────────────────────────────────────────────────────────
+// @route  POST /api/users/reset-password/:token
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ success: false, code: "VALIDATION_FAILED", message: "Token and new password are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, code: "VALIDATION_FAILED", message: "Password must be at least 6 characters" });
+    }
+
+    // Hash the incoming raw token and look it up
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      passwordResetToken:   hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    }).select("+passwordResetToken +passwordResetExpires");
+
+    if (!user) {
+      return res.status(400).json({ success: false, code: "VALIDATION_FAILED", message: "Reset link is invalid or has expired." });
+    }
+
+    user.password             = await bcrypt.hash(password, 12);
+    user.passwordResetToken   = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successful. You can now log in." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { signup, login, getMe, forgotPassword, resetPassword };

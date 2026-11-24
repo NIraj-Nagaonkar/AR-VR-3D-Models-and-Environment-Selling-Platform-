@@ -12,6 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const emailInput      = document.getElementById('email');
   const rememberCheckbox= document.querySelector('.remember-me input[type="checkbox"]');
 
+  // ── Forgot password modal elements
+  const forgotLink      = document.getElementById('forgotPasswordLink');
+  const forgotModal     = document.getElementById('forgotModal');
+  const forgotAlert     = document.getElementById('forgotAlert');
+  const forgotEmailEl   = document.getElementById('forgotEmail');
+  const forgotSubmitBtn = document.getElementById('forgotSubmitBtn');
+  const forgotCancelBtn = document.getElementById('forgotCancelBtn');
+
   // Auto-fill remembered email
   const saved = localStorage.getItem('ather_remembered_email');
   if (saved && emailInput) { emailInput.value = saved; if (rememberCheckbox) rememberCheckbox.checked = true; }
@@ -23,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function clearAlert() { authAlert.style.display = 'none'; }
 
+  // ── Login form ──────────────────────────────────────────────────────────────
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearAlert();
@@ -75,4 +84,78 @@ document.addEventListener('DOMContentLoaded', () => {
       loginBtn.innerHTML = 'LOGIN';
     }
   });
+
+  // ── Forgot Password modal ───────────────────────────────────────────────────
+  function openForgotModal() {
+    forgotModal.style.display = 'flex';
+    forgotAlert.style.display = 'none';
+    if (forgotEmailEl) { forgotEmailEl.value = emailInput?.value || ''; forgotEmailEl.focus(); }
+  }
+  function closeForgotModal() {
+    forgotModal.style.display = 'none';
+  }
+
+  function showForgotAlert(message, type = 'error') {
+    forgotAlert.className = `auth-alert ${type}`;
+    forgotAlert.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${message}</span>`;
+    forgotAlert.style.display = 'flex';
+  }
+
+  if (forgotLink) {
+    forgotLink.addEventListener('click', (e) => { e.preventDefault(); openForgotModal(); });
+  }
+  if (forgotCancelBtn) {
+    forgotCancelBtn.addEventListener('click', closeForgotModal);
+  }
+
+  // Close on backdrop click
+  if (forgotModal) {
+    forgotModal.addEventListener('click', (e) => { if (e.target === forgotModal) closeForgotModal(); });
+  }
+
+  if (forgotSubmitBtn) {
+    forgotSubmitBtn.addEventListener('click', async () => {
+      forgotAlert.style.display = 'none';
+      const email = forgotEmailEl?.value?.trim();
+      if (!email) { showForgotAlert('Please enter your email address.'); return; }
+
+      forgotSubmitBtn.disabled    = true;
+      forgotSubmitBtn.textContent = 'Sending…';
+
+      try {
+        const res  = await fetch('/api/users/forgot-password', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ email }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          showForgotAlert(data.message || 'Something went wrong. Please try again.');
+          forgotSubmitBtn.disabled    = false;
+          forgotSubmitBtn.textContent = 'Send Reset Link';
+          return;
+        }
+
+        // Dev mode: server returns resetUrl so we can test without an email server
+        if (data.devResetUrl) {
+          showForgotAlert(
+            `<b>Dev mode — reset link:</b><br>
+             <a href="${data.devResetUrl}" style="color:#a3c7fc;word-break:break-all;">${data.devResetUrl}</a>`,
+            'success'
+          );
+        } else {
+          showForgotAlert('If that email is registered, a reset link has been sent.', 'success');
+        }
+
+        forgotSubmitBtn.disabled    = false;
+        forgotSubmitBtn.textContent = 'Send Reset Link';
+      } catch (err) {
+        showForgotAlert('Unable to connect to server.');
+        forgotSubmitBtn.disabled    = false;
+        forgotSubmitBtn.textContent = 'Send Reset Link';
+      }
+    });
+  }
 });
+

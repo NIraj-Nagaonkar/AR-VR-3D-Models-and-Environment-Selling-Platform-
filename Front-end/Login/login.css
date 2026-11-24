@@ -204,3 +204,80 @@ body {
     from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Forgot Password Modal ─────────────────────────────────────────────────── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: alertFadeIn 0.2s ease-out;
+}
+
+.modal-box {
+    background: rgba(10, 10, 30, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    padding: 36px 32px 28px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.modal-icon {
+    font-size: 36px;
+    color: #a3c7fc;
+    margin-bottom: 12px;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.modal-header p {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.5;
+}
+
+.modal-input-group {
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.modal-input-group i {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 15px;
+    color: rgba(255,255,255,0.7);
+}
+
+.modal-input-group input {
+    width: 100%;
+    padding: 10px 10px 10px 30px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.3s;
+}
+
+.modal-input-group input::placeholder { color: rgba(255,255,255,0.55); }
+.modal-input-group input:focus { border-bottom-color: #a3c7fc; }
