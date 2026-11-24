@@ -548,7 +548,9 @@ header {
 }
 
 .request-features li::before {
-    content: '✔';
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
     color: white;
     background-color: var(--primary-color);
     border-radius: 50%;
@@ -557,7 +559,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 10px;
     position: absolute;
     left: 0;
     top: 2px;

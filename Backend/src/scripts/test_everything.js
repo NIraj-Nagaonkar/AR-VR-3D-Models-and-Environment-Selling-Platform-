@@ -36,24 +36,24 @@ async function req(method, relPath, { body, token } = {}) {
 
 function pass(name) {
   passed++;
-  console.log(`  ✅ [PASS] ${name}`);
+  console.log(`  [PASS] ${name}`);
 }
 
 function fail(name, detail) {
   failed++;
   failures.push({ name, detail });
-  console.log(`  ❌ [FAIL] ${name}`);
-  if (detail) console.log(`       → ${detail}`);
+  console.log(`  [FAIL] ${name}`);
+  if (detail) console.log(`       -> ${detail}`);
 }
 
 function section(title) {
-  console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  console.log(`\n----------------------------------------------------------`);
   console.log(`  ${title}`);
-  console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  console.log(`----------------------------------------------------------`);
 }
 
 async function runTests() {
-  console.log("🚀 Starting Comprehensive Ather3D System Tests...\n");
+  console.log("Starting Comprehensive Ather3D System Tests...\n");
   const TS = Date.now();
   let adminToken, customerToken, resetToken, createdRequestId, createdProductId;
   const testCustomerEmail = `test_customer_${TS}@example.com`;
@@ -404,12 +404,12 @@ async function runTests() {
   }
 
   // FINAL SUMMARY
-  console.log(`\n══════════════════════════════════════════════════════════`);
-  console.log(`📊 FINAL TEST REPORT`);
-  console.log(`══════════════════════════════════════════════════════════`);
-  console.log(`  Total Passed:  ✅ ${passed}`);
-  console.log(`  Total Failed:  ❌ ${failed}`);
-  console.log(`══════════════════════════════════════════════════════════`);
+  console.log(`\n==========================================================`);
+  console.log(`FINAL TEST REPORT`);
+  console.log(`==========================================================`);
+  console.log(`  Total Passed:  ${passed}`);
+  console.log(`  Total Failed:  ${failed}`);
+  console.log(`==========================================================`);
 
   const mongoose = require("mongoose");
   if (mongoose.connection.readyState !== 0) {
@@ -417,13 +417,13 @@ async function runTests() {
   }
 
   if (failed > 0) {
-    console.log("\n❌ Failed Tests:");
+    console.log("\nFailed Tests:");
     failures.forEach((f, idx) => {
-      console.log(`  ${idx + 1}. ${f.name} → ${f.detail}`);
+      console.log(`  ${idx + 1}. ${f.name} -> ${f.detail}`);
     });
     process.exit(1);
   } else {
-    console.log("\n🎉 ALL TESTS PASSED! Everything is working cleanly and securely.\n");
+    console.log("\nALL TESTS PASSED: System verification successful.\n");
     process.exit(0);
   }
 }

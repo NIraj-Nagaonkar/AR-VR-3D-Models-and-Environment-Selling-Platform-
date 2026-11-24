@@ -29,7 +29,7 @@ const navLinks      = document.getElementById('nav-links');
 if (mobileMenuBtn && navLinks) {
   mobileMenuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
-    mobileMenuBtn.textContent = navLinks.classList.contains('active') ? '✖' : '☰';
+    mobileMenuBtn.innerHTML = navLinks.classList.contains('active') ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
   });
 }
 

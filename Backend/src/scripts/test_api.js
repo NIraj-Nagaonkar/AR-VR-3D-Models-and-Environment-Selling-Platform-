@@ -27,25 +27,25 @@ async function req(method, path, { body, token, form } = {}) {
 
 function pass(label) {
   passed++;
-  console.log(`  ✅ ${label}`);
+  console.log(`  [PASS] ${label}`);
 }
 function fail(label, detail) {
   failed++;
   bugs.push({ label, detail });
-  console.log(`  ❌ ${label}`);
-  if (detail) console.log(`       → ${detail}`);
+  console.log(`  [FAIL] ${label}`);
+  if (detail) console.log(`       -> ${detail}`);
 }
 function warn(label, detail) {
   warned++;
   bugs.push({ label, detail, severity: "warn" });
-  console.log(`  ⚠️  ${label}`);
-  if (detail) console.log(`       → ${detail}`);
+  console.log(`  [WARN] ${label}`);
+  if (detail) console.log(`       -> ${detail}`);
 }
-function section(name) { console.log(`\n━━ ${name} ${"─".repeat(50 - name.length)}`); }
+function section(name) { console.log(`\n-- ${name} ${"-".repeat(50 - name.length)}`); }
 
-// ─── Test runner ─────────────────────────────────────────────────────────────
+// --- Test runner -------------------------------------------------------------
 async function run() {
-  console.log("🧪 Ather3D API Test Suite\n");
+  console.log("Ather3D API Test Suite\n");
 
   let customerToken, adminToken, productId, requestId, testUserId;
   const TS = Date.now();
@@ -460,24 +460,24 @@ async function run() {
     const hasMsg  = r.data.message && typeof r.data.message === "string";
     const hasSucc = r.data.success === false;
     hasCode && hasMsg && hasSucc
-      ? pass("Error response shape: { success, code, message } ✓")
+      ? pass("Error response shape: { success, code, message }")
       : fail("Error response shape", `Got ${JSON.stringify(r.data)}`);
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  console.log("\n" + "═".repeat(60));
-  console.log(`RESULTS: ✅ ${passed} passed  |  ❌ ${failed} failed  |  ⚠️  ${warned} warnings`);
-  console.log("═".repeat(60));
+  // ===================================================================
+  console.log("\n" + "=".repeat(60));
+  console.log(`RESULTS: ${passed} passed  |  ${failed} failed  |  ${warned} warnings`);
+  console.log("=".repeat(60));
 
   if (bugs.length > 0) {
-    console.log("\n🐛 BUGS & ISSUES FOUND:\n");
+    console.log("\nBUGS & ISSUES FOUND:\n");
     bugs.forEach((b, i) => {
-      const icon = b.severity === "warn" ? "⚠️ " : "❌";
-      console.log(`  ${i + 1}. ${icon} ${b.label}`);
+      const tag = b.severity === "warn" ? "[WARN]" : "[FAIL]";
+      console.log(`  ${i + 1}. ${tag} ${b.label}`);
       if (b.detail) console.log(`     ${b.detail}`);
     });
   } else {
-    console.log("\n🎉 No bugs found!");
+    console.log("\nNo bugs found: all suites passed.");
   }
 }
 

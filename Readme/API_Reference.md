@@ -1,73 +1,73 @@
-# Ather3D — API Reference
+ Ather3D — API Reference
 
-> **Base URL:** `http://localhost:5000/api` (development)  
-> **Response format:** Every endpoint returns `{ success: boolean, ...payload }` on success, or `{ success: false, code, message }` on error.  
+> **Base URL:** `http://localhost:5000/api` (development) 
+> **Response format:** Every endpoint returns `{ success: boolean, ...payload }` on success, or `{ success: false, code, message }` on error. 
 > **Authentication:** Send `Authorization: Bearer <token>` in the request header. Tokens are obtained from the login endpoint.
 
 ---
 
-## Authentication Legend
+ Authentication Legend
 
 | Symbol | Meaning |
 |--------|---------|
-| 🌐 Public | No token required |
-| 🔑 Authenticated | Any valid logged-in user |
-| 🛡️ Admin | Admin role required |
+| Public | No token required |
+| Authenticated | Any valid logged-in user |
+| ️ Admin | Admin role required |
 
 ---
 
-## 1. Health
+ 1. Health
 
-### `GET /api/health`
+ `GET /api/health`
 Check if the server is running.
 
-**Auth:** 🌐 Public
+**Auth:** Public
 
 **Response**
 ```json
 {
-  "success": true,
-  "message": "Ather3D API is running",
-  "timestamp": "2026-11-24T10:00:00.000Z"
+ "success": true,
+ "message": "Ather3D API is running",
+ "timestamp": "2026-11-24T10:00:00.000Z"
 }
 ```
 
 ---
 
-## 2. Users
+ 2. Users
 
-### `POST /api/users/signup`
+ `POST /api/users/signup`
 Create a new customer account.
 
-**Auth:** 🌐 Public · Rate-limited (20 requests / 15 min)
+**Auth:** Public · Rate-limited (20 requests / 15 min)
 
 **Request body**
 ```json
 {
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "password": "mypassword"
+ "name": "Jane Doe",
+ "email": "jane@example.com",
+ "password": "mypassword"
 }
 ```
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `name` | string | ✅ | Display name |
-| `email` | string | ✅ | Must be unique |
-| `password` | string | ✅ | Minimum 6 characters |
+| `name` | string | | Display name |
+| `email` | string | | Must be unique |
+| `password` | string | | Minimum 6 characters |
 
 **Success `201`**
 ```json
 {
-  "success": true,
-  "message": "Account created successfully",
-  "token": "<jwt>",
-  "user": {
-    "id": "...",
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "role": "customer"
-  }
+ "success": true,
+ "message": "Account created successfully",
+ "token": "<jwt>",
+ "user": {
+ "id": "...",
+ "name": "Jane Doe",
+ "email": "jane@example.com",
+ "role": "customer"
+ }
 }
 ```
 
@@ -81,31 +81,31 @@ Create a new customer account.
 
 ---
 
-### `POST /api/users/login`
+ `POST /api/users/login`
 Log in and receive a JWT.
 
-**Auth:** 🌐 Public · Rate-limited (20 requests / 15 min)
+**Auth:** Public · Rate-limited (20 requests / 15 min)
 
 **Request body**
 ```json
 {
-  "email": "jane@example.com",
-  "password": "mypassword"
+ "email": "jane@example.com",
+ "password": "mypassword"
 }
 ```
 
 **Success `200`**
 ```json
 {
-  "success": true,
-  "message": "Login successful",
-  "token": "<jwt>",
-  "user": {
-    "id": "...",
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "role": "customer"
-  }
+ "success": true,
+ "message": "Login successful",
+ "token": "<jwt>",
+ "user": {
+ "id": "...",
+ "name": "Jane Doe",
+ "email": "jane@example.com",
+ "role": "customer"
+ }
 }
 ```
 
@@ -121,33 +121,33 @@ Log in and receive a JWT.
 
 ---
 
-### `GET /api/users/me`
+ `GET /api/users/me`
 Get the currently authenticated user's profile.
 
-**Auth:** 🔑 Authenticated
+**Auth:** Authenticated
 
 **Success `200`**
 ```json
 {
-  "success": true,
-  "user": {
-    "id": "...",
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "role": "customer",
-    "createdAt": "2026-11-01T00:00:00.000Z"
-  }
+ "success": true,
+ "user": {
+ "id": "...",
+ "name": "Jane Doe",
+ "email": "jane@example.com",
+ "role": "customer",
+ "createdAt": "2026-11-01T00:00:00.000Z"
+ }
 }
 ```
 
 ---
 
-## 3. Products (Catalog)
+ 3. Products (Catalog)
 
-### `GET /api/products`
+ `GET /api/products`
 Browse the published catalog of 3D models and environments.
 
-**Auth:** 🌐 Public
+**Auth:** Public
 
 **Query parameters**
 
@@ -161,25 +161,25 @@ Browse the published catalog of 3D models and environments.
 **Success `200`**
 ```json
 {
-  "success": true,
-  "total": 48,
-  "page": 1,
-  "limit": 20,
-  "products": [
-    {
-      "id": "...",
-      "title": "City Block Environment",
-      "description": "...",
-      "category": "Environment",
-      "price": 1499,
-      "previewUrl": "https://...",
-      "thumbnailUrl": "https://...",
-      "tags": ["urban", "lowpoly"],
-      "format": ["GLB", "FBX"],
-      "polyCount": 24000,
-      "status": "published"
-    }
-  ]
+ "success": true,
+ "total": 48,
+ "page": 1,
+ "limit": 20,
+ "products": [
+ {
+ "id": "...",
+ "title": "City Block Environment",
+ "description": "...",
+ "category": "Environment",
+ "price": 1499,
+ "previewUrl": "https://...",
+ "thumbnailUrl": "https://...",
+ "tags": ["urban", "lowpoly"],
+ "format": ["GLB", "FBX"],
+ "polyCount": 24000,
+ "status": "published"
+ }
+ ]
 }
 ```
 
@@ -187,10 +187,10 @@ Browse the published catalog of 3D models and environments.
 
 ---
 
-### `GET /api/products/:id`
+ `GET /api/products/:id`
 Get full detail of a single published product.
 
-**Auth:** 🌐 Public
+**Auth:** Public
 
 **Success `200`** — same shape as a single item from the list above.
 
@@ -202,33 +202,33 @@ Get full detail of a single published product.
 
 ---
 
-### `POST /api/products`
+ `POST /api/products`
 Create a new product listing.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Request body**
 ```json
 {
-  "title": "Space Station VR",
-  "description": "High-detail modular space station for VR.",
-  "category": "VR",
-  "price": 2499,
-  "previewUrl": "https://cdn.example.com/previews/space-station.webp",
-  "assetKey": "assets/space-station-v1.glb",
-  "thumbnailUrl": "https://cdn.example.com/thumbs/space-station.jpg",
-  "tags": ["sci-fi", "modular"],
-  "format": ["GLB"],
-  "polyCount": 85000,
-  "status": "draft"
+ "title": "Space Station VR",
+ "description": "High-detail modular space station for VR.",
+ "category": "VR",
+ "price": 2499,
+ "previewUrl": "https://cdn.example.com/previews/space-station.webp",
+ "assetKey": "assets/space-station-v1.glb",
+ "thumbnailUrl": "https://cdn.example.com/thumbs/space-station.jpg",
+ "tags": ["sci-fi", "modular"],
+ "format": ["GLB"],
+ "polyCount": 85000,
+ "status": "draft"
 }
 ```
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `title` | ✅ | |
-| `category` | ✅ | `AR`, `VR`, `3D Model`, `Environment` |
-| `price` | ✅ | In smallest currency unit (e.g. paise) |
+| `title` | | |
+| `category` | | `AR`, `VR`, `3D Model`, `Environment` |
+| `price` | | In smallest currency unit (e.g. paise) |
 | `status` | — | `draft` (default) or `published` |
 | `assetKey` | — | Private storage key — never exposed publicly |
 
@@ -239,10 +239,10 @@ Create a new product listing.
 
 ---
 
-### `PUT /api/products/:id`
+ `PUT /api/products/:id`
 Update a product.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Request body** — any subset of the create fields.
 
@@ -253,10 +253,10 @@ Update a product.
 
 ---
 
-### `DELETE /api/products/:id`
+ `DELETE /api/products/:id`
 Delete a product.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Success `200`**
 ```json
@@ -265,12 +265,12 @@ Delete a product.
 
 ---
 
-## 4. Custom Requests
+ 4. Custom Requests
 
-### `POST /api/requests`
+ `POST /api/requests`
 Submit a custom 3D model commission request.
 
-**Auth:** 🔑 Authenticated
+**Auth:** Authenticated
 
 **Content-Type:** `multipart/form-data`
 
@@ -278,57 +278,57 @@ Submit a custom 3D model commission request.
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
-| `fullName` | text | ✅ | Name or company |
-| `workEmail` | text | ✅ | Contact email |
-| `targetPlatform` | text | ✅ | e.g. `Unity AR`, `Unreal VR` |
-| `specifications` | text | ✅ | Detailed description |
+| `fullName` | text | | Name or company |
+| `workEmail` | text | | Contact email |
+| `targetPlatform` | text | | e.g. `Unity AR`, `Unreal VR` |
+| `specifications` | text | | Detailed description |
 | `blueprintFile` | file | — | Max 50 MB · allowed: `.pdf .png .jpg .jpeg .glb .gltf .fbx .obj .zip` |
 
 **Success `201`**
 ```json
 {
-  "success": true,
-  "message": "Request submitted successfully",
-  "request": {
-    "id": "...",
-    "status": "Pending",
-    "createdAt": "..."
-  }
+ "success": true,
+ "message": "Request submitted successfully",
+ "request": {
+ "id": "...",
+ "status": "Pending",
+ "createdAt": "..."
+ }
 }
 ```
 
 ---
 
-### `GET /api/requests/mine`
+ `GET /api/requests/mine`
 Get all requests submitted by the current user.
 
-**Auth:** 🔑 Authenticated
+**Auth:** Authenticated
 
 **Success `200`**
 ```json
 {
-  "success": true,
-  "count": 3,
-  "requests": [
-    {
-      "id": "...",
-      "fullName": "Jane Doe",
-      "targetPlatform": "Unity AR",
-      "status": "Accepted",
-      "adminNote": "We will start this week.",
-      "quotedPrice": 5000,
-      "createdAt": "..."
-    }
-  ]
+ "success": true,
+ "count": 3,
+ "requests": [
+ {
+ "id": "...",
+ "fullName": "Jane Doe",
+ "targetPlatform": "Unity AR",
+ "status": "Accepted",
+ "adminNote": "We will start this week.",
+ "quotedPrice": 5000,
+ "createdAt": "..."
+ }
+ ]
 }
 ```
 
 ---
 
-### `GET /api/requests`
+ `GET /api/requests`
 Get all requests (admin queue), with optional filters.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Query parameters**
 
@@ -341,44 +341,44 @@ Get all requests (admin queue), with optional filters.
 **Success `200`**
 ```json
 {
-  "success": true,
-  "total": 12,
-  "page": 1,
-  "limit": 20,
-  "requests": [
-    {
-      "id": "...",
-      "user": { "id": "...", "name": "Jane Doe", "email": "jane@example.com" },
-      "fullName": "Jane Doe",
-      "targetPlatform": "Unity AR",
-      "specifications": "...",
-      "fileName": "blueprint.pdf",
-      "status": "Pending",
-      "createdAt": "..."
-    }
-  ]
+ "success": true,
+ "total": 12,
+ "page": 1,
+ "limit": 20,
+ "requests": [
+ {
+ "id": "...",
+ "user": { "id": "...", "name": "Jane Doe", "email": "jane@example.com" },
+ "fullName": "Jane Doe",
+ "targetPlatform": "Unity AR",
+ "specifications": "...",
+ "fileName": "blueprint.pdf",
+ "status": "Pending",
+ "createdAt": "..."
+ }
+ ]
 }
 ```
 
 ---
 
-### `PATCH /api/requests/:id/status`
+ `PATCH /api/requests/:id/status`
 Update the status of a request and optionally add a note or quote.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Request body**
 ```json
 {
-  "status": "Accepted",
-  "adminNote": "Starting development next Monday.",
-  "quotedPrice": 7500
+ "status": "Accepted",
+ "adminNote": "Starting development next Monday.",
+ "quotedPrice": 7500
 }
 ```
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| `status` | ✅ | `Pending`, `Accepted`, `InProgress`, `Completed`, `Delivered`, `Rejected` |
+| `status` | | `Pending`, `Accepted`, `InProgress`, `Completed`, `Delivered`, `Rejected` |
 | `adminNote` | — | Optional message visible to customer |
 | `quotedPrice` | — | Price in smallest currency unit |
 
@@ -389,44 +389,44 @@ Update the status of a request and optionally add a note or quote.
 
 ---
 
-## 5. AI — Gemini Chat *(Admin only)*
+ 5. AI — Gemini Chat *(Admin only)*
 
-### `POST /api/chat`
+ `POST /api/chat`
 Send a message to the Gemini AI spatial assistant.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Request body**
 ```json
 {
-  "prompt": "How do I optimise polygon count for AR on mobile?",
-  "model": "gemini-3.6-flash"
+ "prompt": "How do I optimise polygon count for AR on mobile?",
+ "model": "gemini-3.6-flash"
 }
 ```
 
 **Success `200`**
 ```json
 {
-  "success": true,
-  "reply": "For mobile AR, aim for under 50k polygons total scene budget ...",
-  "modelUsed": "gemini-3.6-flash"
+ "success": true,
+ "reply": "For mobile AR, aim for under 50k polygons total scene budget ...",
+ "modelUsed": "gemini-3.6-flash"
 }
 ```
 
 ---
 
-### `POST /api/chat/analyze-image`
+ `POST /api/chat/analyze-image`
 Analyse a 3D render or texture using Gemini Vision.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Request body**
 ```json
 {
-  "image": "<base64-encoded-image>",
-  "mimeType": "image/png",
-  "prompt": "Review this PBR material for realism issues.",
-  "task": "topology"
+ "image": "<base64-encoded-image>",
+ "mimeType": "image/png",
+ "prompt": "Review this PBR material for realism issues.",
+ "task": "topology"
 }
 ```
 
@@ -440,29 +440,29 @@ Analyse a 3D render or texture using Gemini Vision.
 **Success `200`**
 ```json
 {
-  "success": true,
-  "task": "topology",
-  "analysis": "The mesh shows good edge-loop distribution ...",
-  "modelUsed": "gemini-flash-latest"
+ "success": true,
+ "task": "topology",
+ "analysis": "The mesh shows good edge-loop distribution ...",
+ "modelUsed": "gemini-flash-latest"
 }
 ```
 
 ---
 
-## 6. AI — Luma Generation *(Admin only)*
+ 6. AI — Luma Generation *(Admin only)*
 
-### `POST /api/luma/generations`
+ `POST /api/luma/generations`
 Start a Luma AI image or video generation.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Request body**
 ```json
 {
-  "prompt": "A futuristic city block at night, neon lights, photorealistic",
-  "model": "uni-1",
-  "aspect_ratio": "16:9",
-  "type": "image"
+ "prompt": "A futuristic city block at night, neon lights, photorealistic",
+ "model": "uni-1",
+ "aspect_ratio": "16:9",
+ "type": "image"
 }
 ```
 
@@ -476,31 +476,31 @@ Start a Luma AI image or video generation.
 **Success `200`**
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "gen_abc123",
-    "state": "queued"
-  }
+ "success": true,
+ "data": {
+ "id": "gen_abc123",
+ "state": "queued"
+ }
 }
 ```
 
 ---
 
-### `GET /api/luma/generations/:id`
+ `GET /api/luma/generations/:id`
 Poll a generation for its current status and output URL.
 
-**Auth:** 🛡️ Admin
+**Auth:** ️ Admin
 
 **Success `200`**
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "gen_abc123",
-    "state": "completed",
-    "normalizedAssetUrl": "https://cdn.lumalabs.ai/...",
-    "normalizedAssetType": "image"
-  }
+ "success": true,
+ "data": {
+ "id": "gen_abc123",
+ "state": "completed",
+ "normalizedAssetUrl": "https://cdn.lumalabs.ai/...",
+ "normalizedAssetType": "image"
+ }
 }
 ```
 
@@ -513,15 +513,15 @@ Poll a generation for its current status and output URL.
 
 ---
 
-## Standard Error Response
+ Standard Error Response
 
 All errors follow this shape:
 
 ```json
 {
-  "success": false,
-  "code": "AUTH_REQUIRED",
-  "message": "Authentication token required"
+ "success": false,
+ "code": "AUTH_REQUIRED",
+ "message": "Authentication token required"
 }
 ```
 

@@ -1,10 +1,10 @@
-# Ather3D Documentation
+ Ather3D Documentation
 
 Welcome to the Ather3D documentation hub. Use the links below to find what you need.
 
 ---
 
-## 📚 Documentation Index
+ Documentation Index
 
 | Document | Description |
 |----------|-------------|
@@ -16,22 +16,22 @@ Welcome to the Ather3D documentation hub. Use the links below to find what you n
 
 ---
 
-## ⚡ Quick Start
+ Quick Start
 
 ```bash
-# 1. Install dependencies
+ 1. Install dependencies
 npm install
 
-# 2. Create .env in project root (see Setup Guide for all variables)
-# PORT, MONGO_URI, JWT_SECRET are required
+ 2. Create .env in project root (see Setup Guide for all variables)
+ PORT, MONGO_URI, JWT_SECRET are required
 
-# 3. Start MongoDB
+ 3. Start MongoDB
 net start MongoDB
 
-# 4. Seed the admin account (first time only)
+ 4. Seed the admin account (first time only)
 node Backend/src/scripts/seedAdmin.js
 
-# 5. Run the server
+ 5. Run the server
 npm run dev
 ```
 
@@ -39,7 +39,7 @@ Then open **http://localhost:5000** in your browser.
 
 ---
 
-## 🌐 Pages
+ Pages
 
 | URL | Description |
 |-----|-------------|
@@ -52,7 +52,7 @@ Then open **http://localhost:5000** in your browser.
 
 ---
 
-## 🔑 Roles
+ Roles
 
 | Role | How to get it | What you can do |
 |------|--------------|-----------------|
@@ -61,7 +61,7 @@ Then open **http://localhost:5000** in your browser.
 
 ---
 
-## 🛡️ Security Notes
+ ️ Security Notes
 
 - All admin and AI features require a valid login token
 - Tokens expire in **15 minutes** — re-login when prompted
@@ -70,7 +70,7 @@ Then open **http://localhost:5000** in your browser.
 
 ---
 
-## 📐 Tech Stack
+ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
