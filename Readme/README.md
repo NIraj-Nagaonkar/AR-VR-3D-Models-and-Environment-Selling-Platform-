@@ -8,6 +8,7 @@ Welcome to the Ather3D documentation hub. Use the links below to find what you n
 
 | Document | Description |
 |----------|-------------|
+| [System Architecture & Workflow Manual](./SYSTEM_ARCHITECTURE_AND_WORKFLOW.md) | **Comprehensive Master Guide**: Workflows, system concepts, gateways, security, Sky Blue theme |
 | [Setup Guide](./Setup_Guide.md) | Install, configure, and run the project from scratch |
 | [Architecture Overview](./Architecture.md) | System design, data models, security layers, AI integration |
 | [API Reference](./API_Reference.md) | Full REST API — endpoints, request/response shapes, error codes |
