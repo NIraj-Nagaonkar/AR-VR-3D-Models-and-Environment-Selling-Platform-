@@ -67,12 +67,25 @@ document.addEventListener('DOMContentLoaded', () => {
       saveSession(data.token, data.user);
       showAlert('Login successful! Redirecting...', 'success');
 
-      // Honour ?next= return path
+      // Validate ?next= return path — prevent script injection (javascript:...) and open redirects (// or http)
       const params = new URLSearchParams(window.location.search);
-      const next   = params.get('next');
+      const rawNext = params.get('next');
+      let safeNext = null;
+
+      if (rawNext) {
+        try {
+          const decoded = decodeURIComponent(rawNext).trim();
+          // Must start with a single slash, not double slash or slash-backslash, and contain no control chars/protocol
+          if (decoded.startsWith('/') && !decoded.startsWith('//') && !decoded.startsWith('/\\') && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(decoded)) {
+            safeNext = decoded;
+          }
+        } catch (e) {
+          safeNext = null;
+        }
+      }
 
       setTimeout(() => {
-        if (next) { window.location.href = decodeURIComponent(next); return; }
+        if (safeNext) { window.location.href = safeNext; return; }
         window.location.href = data.user?.role === 'admin'
           ? '/Admin/Admin.html'
           : '/Customer/Customer.html';
@@ -137,11 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Dev mode: server returns resetUrl so we can test without an email server
+        // Dev mode: server returns resetUrl when explicitly in development
         if (data.devResetUrl) {
+          const cleanUrl = String(data.devResetUrl).replace(/"/g, '&quot;');
           showForgotAlert(
-            `<b>Dev mode — reset link:</b><br>
-             <a href="${data.devResetUrl}" style="color:#a3c7fc;word-break:break-all;">${data.devResetUrl}</a>`,
+            `If that email is registered, a reset link has been generated. (Dev mode: <a href="${cleanUrl}" style="color:#a3c7fc;word-break:break-all;">Open Reset Link</a>)`,
             'success'
           );
         } else {

@@ -1,10 +1,77 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // --- Authentication Helpers & Admin Guard ---
+  function getAuthToken() {
+    try {
+      const raw = localStorage.getItem('ather_session');
+      if (raw) {
+        const sess = JSON.parse(raw);
+        if (sess && sess.token) return sess.token;
+      }
+    } catch (e) {}
+    return (localStorage.getItem('aether_auth_token') || localStorage.getItem('ather_auth_token') || '');
+  }
+
+  function getAuthUser() {
+    try {
+      const raw = localStorage.getItem('ather_session');
+      if (raw) {
+        const sess = JSON.parse(raw);
+        if (sess && sess.user) return sess.user;
+      }
+      const rawOld = (localStorage.getItem('aether_user_data') || localStorage.getItem('ather_user_data'));
+      return rawOld ? JSON.parse(rawOld) : null;
+    } catch (e) {}
+    return null;
+  }
+
+  function authHeaders(extraHeaders = {}) {
+    const token = getAuthToken();
+    const headers = { ...extraHeaders };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  }
+
+  function showWorkspaceToast(msg, type = 'info') {
+    let c = document.getElementById('workspace-toast-container');
+    if (!c) {
+      c = document.createElement('div');
+      c.id = 'workspace-toast-container';
+      c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;';
+      document.body.appendChild(c);
+    }
+    const t = document.createElement('div');
+    t.style.cssText = 'padding:10px 16px;border-radius:8px;color:#fff;font-family:Inter,sans-serif;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+    t.style.background = type === 'success' ? '#16A34A' : type === 'error' ? '#DC2626' : type === 'warning' ? '#D97706' : '#9333ea';
+    const icon = document.createElement('i');
+    icon.className = `fa-solid ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-circle-exclamation' : type === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'}`;
+    const span = document.createElement('span');
+    span.textContent = msg;
+    t.appendChild(icon);
+    t.appendChild(span);
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  window.copyLumaAssetLink = function(url) {
+    if (!url) return;
+    navigator.clipboard.writeText(url);
+    showWorkspaceToast('Asset link copied to clipboard!', 'success');
+  };
+
+  // Admin Guard: must have valid admin token
+  const currentToken = getAuthToken();
+  const currentUser = getAuthUser();
+  if (!currentToken || currentUser?.role !== 'admin') {
+    const next = encodeURIComponent(window.location.pathname || '/Admin/Workspace.html');
+    window.location.href = `/Login/login.html?next=${next}`;
+    return;
+  }
+
   // --- Load Logged-in User Profile ---
   function loadUserProfile() {
     try {
-      const raw = (localStorage.getItem('aether_user_data') || localStorage.getItem('ather_user_data'));
-      const user = raw ? JSON.parse(raw) : null;
+      const user = getAuthUser();
       const nameEl = document.getElementById('sidebarUserName') || document.querySelector('.user-name');
       const roleEl = document.getElementById('sidebarUserRole') || document.querySelector('.user-role');
       const welcomeSubject = document.getElementById('welcomeGreetingSubject');
@@ -22,10 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             welcomeSubject.textContent = cleanName.split(' ')[0] || cleanName;
           }
-        }
-        if (user.name.includes('Ather')) {
-          user.name = cleanName;
-          try { localStorage.setItem('aether_user_data', JSON.stringify(user)); } catch (e) {}
         }
         const avatarUrl = user.avatar || defaultAvatar;
         if (userImg) userImg.src = avatarUrl;
@@ -305,7 +368,7 @@ Your responsibilities:
           <a href="${escapeHtml(msg.assetUrl)}" target="_blank" download class="luma-action-btn">
             <i class="fa-solid fa-download"></i> Download Asset
           </a>
-          <button type="button" class="luma-action-btn" onclick="navigator.clipboard.writeText('${escapeHtml(msg.assetUrl)}'); alert('Asset link copied to clipboard!');">
+          <button type="button" class="luma-action-btn" onclick="window.copyLumaAssetLink('${escapeHtml(msg.assetUrl)}')">
             <i class="fa-regular fa-copy"></i> Copy Link
           </button>
         </div>
@@ -531,80 +594,27 @@ Your responsibilities:
     bubble.innerHTML = '<span style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Aether3D is reasoning about 3D topology & shaders...</span>';
     scrollToBottom();
 
-    // 5. Request Google Gemini API (Direct if custom key configured, or via backend /api/chat)
-    const apiKey = getActiveApiKey();
+    // 5. Request backend proxy /api/chat with admin token (Gemini key stored securely in backend .env)
     const preferredModel = getActiveModel();
 
     try {
-      let response;
-      let data;
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          contents: conversationHistory,
+          system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+          model: preferredModel
+        })
+      });
 
-      if (apiKey) {
-        // Resilient failover cascade for direct API key
-        const candidateModels = [
-          preferredModel,
-          'gemini-flash-latest',
-          'gemini-3.5-flash',
-          'gemini-3.6-flash',
-          'gemini-3.5-flash-lite'
-        ].filter((m, i, arr) => m && arr.indexOf(m) === i);
-
-        let lastErrData = null;
-
-        for (const candModel of candidateModels) {
-          try {
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${candModel}:generateContent?key=${apiKey}`;
-            const requestBody = {
-              system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-              contents: conversationHistory,
-              generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-            };
-
-            response = await fetch(endpoint, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(requestBody)
-            });
-
-            data = await response.json();
-
-            if (response.ok) break;
-
-            const errText = data.error?.message || '';
-            const isHighDemand = 
-              response.status === 503 || 
-              response.status === 429 || 
-              errText.toLowerCase().includes('high demand') ||
-              errText.toLowerCase().includes('overloaded');
-
-            if (isHighDemand && candModel !== candidateModels[candidateModels.length - 1]) {
-              console.warn(`[Aether3D] Model ${candModel} high demand (HTTP ${response.status}). Failing over to next candidate...`);
-              await new Promise(r => setTimeout(r, 600));
-              continue;
-            }
-
-            lastErrData = data;
-          } catch (fetchErr) {
-            console.warn(`[Aether3D] Model ${candModel} request failed:`, fetchErr);
-          }
-        }
-
-        if (!response || !response.ok) {
-          data = lastErrData || data || {};
-        }
-      } else {
-        // Use resilient backend proxy /api/chat
-        response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: conversationHistory,
-            system_instruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-            model: preferredModel
-          })
-        });
-        data = await response.json();
+      if (response.status === 401) {
+        localStorage.removeItem('ather_session');
+        window.location.href = `/Login/login.html?next=${encodeURIComponent('/Admin/Workspace.html')}`;
+        return;
       }
+
+      const data = await response.json();
 
       if (!response.ok || (data.success === false && !data.candidates && !data.reply)) {
         const errorMsg = data.error?.message || data.message || `HTTP ${response.status} ${response.statusText}`;
@@ -747,13 +757,11 @@ Your responsibilities:
 
     // 4. Submit to Backend /api/luma/generations
     try {
-      const lumaApiKey = getActiveLumaKey();
       const response = await fetch('/api/luma/generations', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-luma-key': lumaApiKey
-        },
+        headers: authHeaders({
+          'Content-Type': 'application/json'
+        }),
         body: JSON.stringify({
           prompt: promptText,
           model: activeModel,
@@ -814,7 +822,6 @@ Your responsibilities:
 
   // --- Polling Luma Generation Progress ---
   function pollLumaGeneration(genId, cardId, promptText, model, currentSession, sessions) {
-    const lumaApiKey = getActiveLumaKey();
     const maxAttempts = 60; // 60 * 3s = 3 minutes
     let attempts = 0;
 
@@ -834,7 +841,7 @@ Your responsibilities:
 
       try {
         const res = await fetch(`/api/luma/generations/${genId}`, {
-          headers: { 'x-luma-key': lumaApiKey }
+          headers: authHeaders()
         });
         const json = await res.json();
 
@@ -894,8 +901,7 @@ Your responsibilities:
             `;
 
             document.getElementById(`${cardId}_copyBtn`)?.addEventListener('click', () => {
-              navigator.clipboard.writeText(assetUrl);
-              alert('Luma asset URL copied to clipboard!');
+              window.copyLumaAssetLink(assetUrl);
             });
           }
 
@@ -1282,7 +1288,7 @@ Your responsibilities:
 
     try {
       const res = await fetch('/api/luma/status', {
-        headers: { 'x-luma-key': testKey }
+        headers: authHeaders()
       });
       const data = await res.json();
 
@@ -1576,7 +1582,7 @@ Your responsibilities:
     btnRunGenerate?.addEventListener('click', async () => {
       const userPrompt = genPromptInput?.value?.trim();
       if (!userPrompt) {
-        alert('Please enter a description for the 3D model or texture you want to generate.');
+        showWorkspaceToast('Please enter a description for the 3D model or texture you want to generate.', 'warning');
         genPromptInput?.focus();
         return;
       }
@@ -1607,7 +1613,7 @@ Your responsibilities:
           // Request via Luma Generations Backend API
           const response = await fetch('/api/luma/generations', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({
               prompt: fullPrompt,
               model: 'uni-1',
@@ -1629,7 +1635,9 @@ Your responsibilities:
             await new Promise(r => setTimeout(r, 2000));
             polls++;
 
-            const pollRes = await fetch(`/api/luma/generations/${genId}`);
+            const pollRes = await fetch(`/api/luma/generations/${genId}`, {
+              headers: authHeaders()
+            });
             const pollData = await pollRes.json();
             const state = pollData.data?.state;
 
@@ -1677,7 +1685,7 @@ Your responsibilities:
         console.error('Generation Error:', err);
         canvasLoading.style.display = 'none';
         canvasPlaceholder.style.display = 'block';
-        alert(`Generation Error: ${err.message}`);
+        showWorkspaceToast(`Generation Error: ${err.message}`, 'error');
       } finally {
         btnRunGenerate.disabled = false;
         btnRunGenerateText.textContent = 'Generate 3D Asset';
@@ -1722,7 +1730,7 @@ Your responsibilities:
       try {
         const proxyRes = await fetch('/api/chat/proxy-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ url: lastGeneratedData.url })
         });
         const proxyData = await proxyRes.json();
@@ -1804,7 +1812,7 @@ Your responsibilities:
       try {
         const proxyRes = await fetch('/api/chat/proxy-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ url: lastGeneratedData.url })
         });
         const proxyData = await proxyRes.json();
@@ -1901,7 +1909,7 @@ Your responsibilities:
     // --- Run Vision Analysis ---
     btnRunAnalysis?.addEventListener('click', async () => {
       if (!currentInspectionImage?.dataUrl) {
-        alert('Please upload, drag & drop, or paste a 3D model render or texture to inspect.');
+        showWorkspaceToast('Please upload, drag & drop, or paste a 3D model render or texture to inspect.', 'warning');
         return;
       }
 
@@ -1918,7 +1926,7 @@ Your responsibilities:
       try {
         const response = await fetch('/api/chat/analyze-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             image: currentInspectionImage.dataUrl,
             task: selectedAnalysisTask,
@@ -1959,7 +1967,7 @@ Your responsibilities:
         console.error('Vision Analysis Error:', err);
         reportLoading.style.display = 'none';
         reportPlaceholder.style.display = 'block';
-        alert(`Vision Analysis Error: ${err.message}`);
+        showWorkspaceToast(`Vision Analysis Error: ${err.message}`, 'error');
       } finally {
         btnRunAnalysis.disabled = false;
         btnRunAnalysisText.textContent = 'Run 3D Vision Analysis';

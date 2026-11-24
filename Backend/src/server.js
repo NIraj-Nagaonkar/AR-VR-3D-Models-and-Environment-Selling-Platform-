@@ -33,8 +33,9 @@ app.use(helmet({
       defaultSrc:  ["'self'"],
       scriptSrc:   [
         "'self'",
-        "'unsafe-inline'",          // allow inline onclick handlers in HTML pages
+        "'unsafe-inline'",                // allow inline onclick handlers in HTML pages
         "https://cdnjs.cloudflare.com",   // Three.js CDN
+        "https://cdn.jsdelivr.net",       // OrbitControls & Three.js addons
         "https://fonts.googleapis.com",
       ],
       styleSrc:    [
@@ -50,7 +51,15 @@ app.use(helmet({
       ],
       imgSrc:      ["'self'", "data:", "blob:", "https:"],
       connectSrc:  ["'self'"],
-      mediaSrc:    ["'self'", "blob:"],
+      mediaSrc:    [
+        "'self'",
+        "blob:",
+        "https://storage.cdn-luma.com",
+        "https://cdn.lumalabs.ai",
+        "https://assets.lumalabs.ai",
+        "https://*.lumalabs.ai",
+        "https:"
+      ],
       objectSrc:   ["'none'"],
       frameSrc:    ["'none'"],
       workerSrc:   ["'self'", "blob:"],

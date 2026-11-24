@@ -91,13 +91,23 @@ async function runTests() {
         fail(`Page ${page} failed to load`, `Status: ${r.status}`);
       }
 
-      // Check CSP on the first page
+      // Check CSP on Admin.html
       if (page === "/Admin/Admin.html" && r.headers) {
         const csp = r.headers.get("content-security-policy") || "";
         if (csp.includes("script-src-attr") && csp.includes("'unsafe-inline'")) {
           pass("Admin.html includes Helmet CSP with script-src-attr 'unsafe-inline' (enables onclick buttons)");
         } else {
           fail("CSP script-src-attr missing or incorrect", csp);
+        }
+        if (csp.includes("https://cdn.jsdelivr.net")) {
+          pass("CSP includes https://cdn.jsdelivr.net for OrbitControls");
+        } else {
+          fail("CSP missing https://cdn.jsdelivr.net", csp);
+        }
+        if (csp.includes("https://storage.cdn-luma.com")) {
+          pass("CSP media-src includes Luma CDN domains for video streaming");
+        } else {
+          fail("CSP media-src missing Luma video domains", csp);
         }
       }
     }
@@ -163,7 +173,7 @@ async function runTests() {
     }
   }
 
-  // 5. FORGOT PASSWORD & RESET FLOW
+  // 5. FORGOT PASSWORD & RESET FLOW (ACCOUNT TAKEOVER PROTECTION)
   section("5. FORGOT PASSWORD & RESET PASSWORD FLOW");
   {
     const rForgot = await req("POST", "/api/users/forgot-password", {
@@ -172,49 +182,65 @@ async function runTests() {
 
     if (rForgot.status === 200 && rForgot.data?.success) {
       pass("POST /api/users/forgot-password returns success");
-      if (rForgot.data?.devResetUrl) {
-        pass(`Dev reset URL generated: ${rForgot.data.devResetUrl}`);
-        const urlObj = new URL(rForgot.data.devResetUrl);
-        resetToken = urlObj.searchParams.get("token");
+      
+      // CRITICAL SECURITY CHECK: devResetUrl must NOT be leaked when NODE_ENV is production
+      if (process.env.NODE_ENV === "production") {
+        if (!rForgot.data?.devResetUrl) {
+          pass("SECURITY: devResetUrl is NOT leaked in production (Account takeover prevented)");
+        } else {
+          fail("CRITICAL: devResetUrl leaked in production response!", rForgot.data.devResetUrl);
+        }
       }
     } else {
       fail("Forgot password request failed", `Status: ${rForgot.status}, data: ${JSON.stringify(rForgot.data)}`);
     }
 
-    if (resetToken) {
-      // Test password reset
-      const rReset = await req("POST", `/api/users/reset-password/${encodeURIComponent(resetToken)}`, {
-        body: { password: updatedPassword },
+    // Direct token generation test to verify resetPassword handler
+    const crypto = require("crypto");
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    
+    // Set token directly in DB to test the reset endpoint
+    const mongoose = require("mongoose");
+    const User = require("../Modules/User/user.model");
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGO_URI);
+    }
+    await User.updateOne(
+      { email: testCustomerEmail },
+      { passwordResetToken: hashedToken, passwordResetExpires: Date.now() + 3600000 }
+    );
+
+    // Test password reset endpoint
+    const rReset = await req("POST", `/api/users/reset-password/${encodeURIComponent(rawToken)}`, {
+      body: { password: updatedPassword },
+    });
+
+    if (rReset.status === 200 && rReset.data?.success) {
+      pass("POST /api/users/reset-password/:token successfully updated password");
+
+      // Verify old password now fails
+      const rOldLogin = await req("POST", "/api/users/login", {
+        body: { email: testCustomerEmail, password: initialPassword },
       });
-
-      if (rReset.status === 200 && rReset.data?.success) {
-        pass("POST /api/users/reset-password/:token successfully updated password");
-
-        // Verify old password now fails
-        const rOldLogin = await req("POST", "/api/users/login", {
-          body: { email: testCustomerEmail, password: initialPassword },
-        });
-        if (rOldLogin.status === 401) {
-          pass("Login with old password now correctly fails (401)");
-        } else {
-          fail("Old password still allowed after reset!", `Status: ${rOldLogin.status}`);
-        }
-
-        // Verify new password succeeds
-        const rNewLogin = await req("POST", "/api/users/login", {
-          body: { email: testCustomerEmail, password: updatedPassword },
-        });
-        if (rNewLogin.status === 200 && rNewLogin.data?.token) {
-          customerToken = rNewLogin.data.token;
-          pass("Login with newly reset password succeeds (200 OK)");
-        } else {
-          fail("Login with new password failed", `Status: ${rNewLogin.status}`);
-        }
+      if (rOldLogin.status === 401) {
+        pass("Login with old password now correctly fails (401)");
       } else {
-        fail("POST /api/users/reset-password/:token failed", `Status: ${rReset.status}, data: ${JSON.stringify(rReset.data)}`);
+        fail("Old password still allowed after reset!", `Status: ${rOldLogin.status}`);
+      }
+
+      // Verify new password succeeds
+      const rNewLogin = await req("POST", "/api/users/login", {
+        body: { email: testCustomerEmail, password: updatedPassword },
+      });
+      if (rNewLogin.status === 200 && rNewLogin.data?.token) {
+        customerToken = rNewLogin.data.token;
+        pass("Login with newly reset password succeeds (200 OK)");
+      } else {
+        fail("Login with new password failed", `Status: ${rNewLogin.status}`);
       }
     } else {
-      fail("Password reset token could not be extracted");
+      fail("POST /api/users/reset-password/:token failed", `Status: ${rReset.status}, data: ${JSON.stringify(rReset.data)}`);
     }
   }
 

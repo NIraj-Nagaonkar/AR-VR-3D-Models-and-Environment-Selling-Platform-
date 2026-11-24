@@ -148,9 +148,30 @@ function closeMenuDropdown() {
     toggleBtn?.classList.remove('active');
 }
 
+function showAdminToast(msg, type = 'info') {
+    let c = document.getElementById('admin-toast-container');
+    if (!c) {
+        c = document.createElement('div');
+        c.id = 'admin-toast-container';
+        c.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;';
+        document.body.appendChild(c);
+    }
+    const t = document.createElement('div');
+    t.style.cssText = 'padding:10px 16px;border-radius:8px;color:#fff;font-family:sans-serif;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.25);';
+    t.style.background = type === 'success' ? '#16A34A' : type === 'error' ? '#DC2626' : '#9333ea';
+    const icon = document.createElement('i');
+    icon.className = `fa-solid ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info'}`;
+    const span = document.createElement('span');
+    span.textContent = msg;
+    t.appendChild(icon);
+    t.appendChild(span);
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+}
+
 function showNotifications() {
     closeMenuDropdown();
-    alert('No new notifications at this time.');
+    showAdminToast('No new notifications at this time.', 'info');
 }
 
 function visitClientDashboard() {
@@ -183,13 +204,13 @@ function switchSettingsTab(tabKey) {
 
 function saveProfile(event) {
     event.preventDefault();
-    alert('Admin profile settings updated successfully!');
+    showAdminToast('Admin profile settings updated successfully!', 'success');
     closeModal('settingsModal');
 }
 
 function saveSecurityPrivacy(event) {
     event.preventDefault();
-    alert('Security and privacy preferences updated successfully!');
+    showAdminToast('Security and privacy preferences updated successfully!', 'success');
     closeModal('settingsModal');
 }
 

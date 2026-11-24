@@ -116,10 +116,9 @@ const forgotPassword = async (req, res, next) => {
     user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save({ validateBeforeSave: false });
 
-    // Build reset URL — raw token goes in the URL, hashed token stays in DB
-    const protocol  = req.protocol;
-    const host      = req.get("host");
-    const resetUrl  = `${protocol}://${host}/Login/reset-password.html?token=${rawToken}`;
+    // Build reset URL using fixed APP_URL setting instead of request's Host header
+    const baseUrl  = (process.env.APP_URL || "http://localhost:5000").replace(/\/+$/, "");
+    const resetUrl  = `${baseUrl}/Login/reset-password.html?token=${rawToken}`;
 
     // Log to server console (no email service configured)
     console.log("\n========== PASSWORD RESET LINK ==========");
@@ -129,8 +128,8 @@ const forgotPassword = async (req, res, next) => {
 
     const responsePayload = { success: true, message: "If that email is registered you will receive a reset link." };
 
-    // In development expose the link so it can be used without an email service
-    if (process.env.NODE_ENV !== "production") {
+    // ONLY return devResetUrl when NODE_ENV is explicitly 'development'
+    if (process.env.NODE_ENV === "development") {
       responsePayload.devResetUrl = resetUrl;
     }
 

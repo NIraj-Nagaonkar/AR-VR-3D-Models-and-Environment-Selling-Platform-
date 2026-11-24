@@ -52,7 +52,16 @@ export function showToast(message, type = 'info', duration = 4000) {
                            'background:#2563EB;'}
   `;
 
-  toast.innerHTML = `<i class="fa-solid ${icon}" style="flex-shrink:0"></i><span>${message}</span>`;
+  // Safe DOM creation — never interpret message as HTML to prevent XSS
+  const iconEl = document.createElement('i');
+  iconEl.className = `fa-solid ${icon}`;
+  iconEl.style.flexShrink = '0';
+
+  const textEl = document.createElement('span');
+  textEl.textContent = message;
+
+  toast.appendChild(iconEl);
+  toast.appendChild(textEl);
   toast.addEventListener('click', () => dismiss(toast));
 
   container.appendChild(toast);

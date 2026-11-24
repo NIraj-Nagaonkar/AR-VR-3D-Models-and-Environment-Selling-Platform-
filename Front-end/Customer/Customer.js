@@ -1,16 +1,27 @@
 /**
  * Front-end/Customer/Customer.js
- * - Relative API URLs only
- * - Auth token sent on request submission (guard added)
- * - alert() replaced with toast
- * - "My Requests" section added — polls GET /api/requests/mine
+ * - Uses shared api.js for centralized 401 redirection and bearer token attachment
+ * - XSS-sanitized template rendering
+ * - Non-blocking toast notifications
+ * - My Requests section polls /api/requests/mine
  */
-import { requireLogin, requireAdmin } from '../shared/guard.js';
-import { getToken, getUser, logout }  from '../shared/auth.js';
-import { showToast }                  from '../shared/ui/toast.js';
+import { requireLogin } from '../shared/guard.js';
+import { getUser, logout } from '../shared/auth.js';
+import { api, ApiError } from '../shared/api.js';
+import { showToast } from '../shared/ui/toast.js';
 
-// Guard — must be logged in (not admin) to view this page
+// Guard — must be logged in to view this page
 requireLogin();
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // ── Mobile nav toggle ───────────────────────────────────────────────
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
@@ -18,7 +29,7 @@ const navLinks      = document.getElementById('nav-links');
 if (mobileMenuBtn && navLinks) {
   mobileMenuBtn.addEventListener('click', () => {
     navLinks.classList.toggle('active');
-    mobileMenuBtn.innerHTML = navLinks.classList.contains('active') ? '✖' : '☰';
+    mobileMenuBtn.textContent = navLinks.classList.contains('active') ? '✖' : '☰';
   });
 }
 
@@ -43,22 +54,16 @@ if (requestForm) {
     submitBtn.textContent = 'Submitting...';
 
     const formData = new FormData();
-    formData.append('fullName',       document.getElementById('fullName').value);
-    formData.append('workEmail',      document.getElementById('workEmail').value);
+    formData.append('fullName',       document.getElementById('fullName').value.trim());
+    formData.append('workEmail',      document.getElementById('workEmail').value.trim());
     formData.append('targetPlatform', document.getElementById('targetPlatform').value);
-    formData.append('specifications', document.getElementById('specifications').value);
+    formData.append('specifications', document.getElementById('specifications').value.trim());
 
     const fileInput = document.getElementById('blueprintFile');
     if (fileInput?.files.length > 0) formData.append('blueprintFile', fileInput.files[0]);
 
     try {
-      const token = getToken();
-      const res   = await fetch('/api/requests', {
-        method:  'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        body:    formData,
-      });
-      const data = await res.json();
+      const data = await api.post('/requests', formData);
 
       if (data.success) {
         showToast('Request submitted successfully! We will get back to you shortly.', 'success', 6000);
@@ -66,13 +71,14 @@ if (requestForm) {
         // Refresh "My Requests" section
         loadMyRequests();
       } else {
-        const msg = data.code === 'AUTH_REQUIRED'
-          ? 'Please log in to submit a request.'
-          : (data.message || 'Submission failed. Please try again.');
-        showToast(msg, 'error');
+        showToast(data.message || 'Submission failed. Please try again.', 'error');
       }
     } catch (err) {
-      showToast('Could not reach the server. Please check your connection.', 'error');
+      if (err instanceof ApiError && err.status === 401) {
+        // Redirection already handled by api.js
+        return;
+      }
+      showToast(err.message || 'Could not reach the server. Please check your connection.', 'error');
     } finally {
       submitBtn.disabled   = false;
       submitBtn.textContent = originalText;
@@ -97,13 +103,7 @@ async function loadMyRequests() {
   container.innerHTML = `<div class="spinner-wrap"><i class="fa-solid fa-spinner fa-spin"></i> Loading your requests...</div>`;
 
   try {
-    const token = getToken();
-    if (!token) { container.innerHTML = '<p class="empty-msg">Please log in to see your requests.</p>'; return; }
-
-    const res  = await fetch('/api/requests/mine', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    const data = await res.json();
+    const data = await api.get('/requests/mine');
 
     if (!data.success || !data.requests?.length) {
       container.innerHTML = `
@@ -117,32 +117,41 @@ async function loadMyRequests() {
     container.innerHTML = data.requests.map(r => {
       const badgeClass = STATUS_BADGE[r.status] || 'badge-pending';
       const date       = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—';
-      const note       = r.adminNote  ? `<p class="req-note"><strong>Admin note:</strong> ${r.adminNote}</p>` : '';
-      const quote      = r.quotedPrice != null ? `<p class="req-quote"><strong>Quoted price:</strong> ₹${r.quotedPrice.toLocaleString()}</p>` : '';
+      const safePlatform = escapeHtml(r.targetPlatform || 'General');
+      const safeStatus   = escapeHtml(r.status || 'Pending');
+      const rawSpecs     = r.specifications || '';
+      const safeSpecs    = escapeHtml(rawSpecs.slice(0, 160) + (rawSpecs.length > 160 ? '…' : ''));
+      const note         = r.adminNote ? `<p class="req-note"><strong>Admin note:</strong> ${escapeHtml(r.adminNote)}</p>` : '';
+      const quote        = r.quotedPrice != null ? `<p class="req-quote"><strong>Quoted price:</strong> ₹${escapeHtml(r.quotedPrice.toLocaleString())}</p>` : '';
 
       return `
         <div class="req-card">
           <div class="req-card-header">
-            <span class="req-platform">${r.targetPlatform || 'General'}</span>
-            <span class="badge ${badgeClass}">${r.status}</span>
+            <span class="req-platform">${safePlatform}</span>
+            <span class="badge ${badgeClass}">${safeStatus}</span>
           </div>
-          <p class="req-specs">${r.specifications?.slice(0, 160)}${r.specifications?.length > 160 ? '…' : ''}</p>
+          <p class="req-specs">${safeSpecs}</p>
           ${note}${quote}
-          <span class="req-date">Submitted ${date}</span>
+          <span class="req-date">Submitted ${escapeHtml(date)}</span>
         </div>`;
     }).join('');
 
   } catch (err) {
+    if (err instanceof ApiError && err.status === 401) return;
     container.innerHTML = `<p class="empty-msg error">Could not load your requests. Please refresh.</p>`;
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadMyRequests);
+document.addEventListener('DOMContentLoaded', () => {
+  loadMyRequests();
 
-// ── Card video playback ─────────────────────────────────────────────
-window.playVideo = function(cardElement) {
-  const video = cardElement.querySelector('video');
-  if (!video) return;
-  if (video.paused) { video.play(); video.controls = true; }
-  else { video.pause(); }
-};
+  // Attach click listener for video cards
+  document.querySelectorAll('.video-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const video = card.querySelector('video');
+      if (!video) return;
+      if (video.paused) { video.play(); video.controls = true; }
+      else { video.pause(); }
+    });
+  });
+});
