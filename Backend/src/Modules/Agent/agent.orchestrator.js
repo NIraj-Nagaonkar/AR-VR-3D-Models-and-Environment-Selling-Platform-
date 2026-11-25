@@ -52,7 +52,7 @@ async function advanceRun(runId) {
   const jobDir = getJobDir(run.jobId);
   const manifestPath = path.join(jobDir, 'manifest.json');
   const glbPath = path.join(jobDir, 'model.glb');
-  const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Aether\\Unity3D_Project';
+  const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Users\\Niraj Nagaonkar\\Work3D_Test';
   const importedDir = path.join(projectPath, 'Assets', 'Generated', run.jobId);
 
   // Retrieve steps run so far

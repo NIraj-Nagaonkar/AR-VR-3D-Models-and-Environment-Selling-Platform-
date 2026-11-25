@@ -52,7 +52,7 @@ const TOOL_CATALOGUE = {
 
   build_model_unity: {
     name: 'build_model_unity',
-    description: 'Execute Unity Engine in headless batchmode to build procedural geometry, assign PBR materials, and export GLB.',
+    description: 'Execute Unity Engine in headless batchmode via Unity CLI to build procedural geometry, assign PBR materials, and export GLB.',
     risk: 'MEDIUM',
     requiresApproval: true,
     schema: {
@@ -62,15 +62,19 @@ const TOOL_CATALOGUE = {
       }
     },
     buildCommand(args, context) {
-      const unityExe = process.env.UNITY_EDITOR_PATH || 'C:\\Program Files\\Unity\\Hub\\Editor\\6000.6.1f1\\Editor\\Unity.exe';
-      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Aether\\Unity3D_Project';
+      const unityCli = process.env.UNITY_CLI_PATH || 'unity';
+      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Users\\Niraj Nagaonkar\\Work3D_Test';
       const manifestPath = path.join(context.jobDir, args.manifestFile || 'manifest.json');
       const logPath = path.join(context.jobDir, 'unity_build.log');
 
       const cmdArgs = [
-        '-batchmode',
+        'run',
+        projectPath,
+        '--timeout', '300',
+        '--json',
+        '--non-interactive',
+        '--',
         '-nographics',
-        '-projectPath', projectPath,
         '-executeMethod', 'Aether3D.ModelBuilder.ExecuteBuild',
         '-manifest', manifestPath,
         '-outputDir', context.jobDir,
@@ -78,18 +82,18 @@ const TOOL_CATALOGUE = {
       ];
 
       return {
-        executable: unityExe,
+        executable: unityCli,
         args: cmdArgs,
-        displayCommand: `Unity.exe -batchmode -nographics -projectPath "${projectPath}" -executeMethod Aether3D.ModelBuilder.ExecuteBuild -manifest "${manifestPath}" -outputDir "${context.jobDir}"`,
+        displayCommand: `unity run "${projectPath}" --timeout 300 --json --non-interactive -- -nographics -executeMethod Aether3D.ModelBuilder.ExecuteBuild -manifest "${manifestPath}" -outputDir "${context.jobDir}"`,
         cwd: context.jobDir,
-        reason: 'Build 3D mesh in Unity batchmode and export Draco-compressed .GLB file'
+        reason: 'Build 3D mesh in Unity batchmode via Unity CLI and export .GLB file'
       };
     }
   },
 
   animate_model_unity: {
     name: 'animate_model_unity',
-    description: 'Add procedural animation preset (spin, bob, swing, slide) to target mesh components.',
+    description: 'Add procedural animation preset (spin, bob, swing, slide) to target mesh components in Unity.',
     risk: 'MEDIUM',
     requiresApproval: true,
     schema: {
@@ -103,20 +107,24 @@ const TOOL_CATALOGUE = {
       required: ['preset']
     },
     buildCommand(args, context) {
-      const unityExe = process.env.UNITY_EDITOR_PATH || 'C:\\Program Files\\Unity\\Hub\\Editor\\6000.6.1f1\\Editor\\Unity.exe';
-      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Aether\\Unity3D_Project';
+      const unityCli = process.env.UNITY_CLI_PATH || 'unity';
+      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Users\\Niraj Nagaonkar\\Work3D_Test';
 
       return {
-        executable: unityExe,
+        executable: unityCli,
         args: [
-          '-batchmode',
+          'run',
+          projectPath,
+          '--timeout', '300',
+          '--json',
+          '--non-interactive',
+          '--',
           '-nographics',
-          '-projectPath', projectPath,
           '-executeMethod', 'Aether3D.AnimationBuilder.Apply',
           '-animPreset', args.preset || 'spin',
           '-jobDir', context.jobDir
         ],
-        displayCommand: `Unity.exe -batchmode -nographics -projectPath "${projectPath}" -executeMethod Aether3D.AnimationBuilder.Apply -animPreset "${args.preset || 'spin'}"`,
+        displayCommand: `unity run "${projectPath}" --timeout 300 --json --non-interactive -- -nographics -executeMethod Aether3D.AnimationBuilder.Apply -animPreset "${args.preset || 'spin'}"`,
         cwd: context.jobDir,
         reason: `Apply procedural ${args.preset || 'spin'} animation clip to 3D model in Unity`
       };
@@ -135,7 +143,7 @@ const TOOL_CATALOGUE = {
       }
     },
     buildCommand(args, context) {
-      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Aether\\Unity3D_Project';
+      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Users\\Niraj Nagaonkar\\Work3D_Test';
       const targetDir = path.join(projectPath, 'Assets', 'Generated', context.jobId);
       return {
         executable: 'INTERNAL_FS_COPY',
@@ -143,6 +151,27 @@ const TOOL_CATALOGUE = {
         displayCommand: `robocopy "${context.jobDir}" "${targetDir}" *.glb *.png *.json /E`,
         cwd: context.jobDir,
         reason: `Import generated 3D assets into Unity project Assets/Generated/${context.jobId}/`
+      };
+    }
+  },
+
+  check_unity_status: {
+    name: 'check_unity_status',
+    description: 'Check whether the Unity project is currently open in an Editor or running a build job.',
+    risk: 'LOW',
+    requiresApproval: process.env.AGENT_AUTO_ALLOW_READONLY !== 'true',
+    schema: {
+      type: 'object',
+      properties: {}
+    },
+    buildCommand(args, context) {
+      const unityCli = process.env.UNITY_CLI_PATH || 'unity';
+      return {
+        executable: unityCli,
+        args: ['status', '--json'],
+        displayCommand: `unity status --json`,
+        cwd: context.jobDir,
+        reason: 'Inspect active Unity Editor processes and project lock state'
       };
     }
   },
@@ -157,14 +186,14 @@ const TOOL_CATALOGUE = {
       properties: {}
     },
     buildCommand(args, context) {
-      const unityExe = process.env.UNITY_EDITOR_PATH || 'C:\\Program Files\\Unity\\Hub\\Editor\\6000.6.1f1\\Editor\\Unity.exe';
-      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Aether\\Unity3D_Project';
+      const unityCli = process.env.UNITY_CLI_PATH || 'unity';
+      const projectPath = process.env.UNITY_PROJECT_PATH || 'C:\\Users\\Niraj Nagaonkar\\Work3D_Test';
       return {
-        executable: unityExe,
-        args: ['-projectPath', projectPath],
-        displayCommand: `Unity.exe -projectPath "${projectPath}"`,
+        executable: unityCli,
+        args: ['open', projectPath],
+        displayCommand: `unity open "${projectPath}"`,
         cwd: projectPath,
-        reason: 'Launch Unity Editor window to inspect and interact with the generated asset'
+        reason: 'Launch Unity Editor GUI window to inspect and interact with the generated asset'
       };
     }
   },
