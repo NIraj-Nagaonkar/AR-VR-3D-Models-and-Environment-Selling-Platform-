@@ -108,12 +108,14 @@ const productRoutes = require("./Modules/Product/product.routes");
 const requestRoutes = require("./Modules/Request/request.routes");
 const chatRoutes    = require("./Modules/Chat/chat.routes");
 const lumaRoutes    = require("./Modules/Luma/luma.routes");
+const agentRoutes   = require("./Modules/Agent/agent.routes");
 
 app.use("/api/users",    authLimiter, userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/chat",     chatRoutes);
 app.use("/api/luma",     lumaRoutes);
+app.use("/api/agent",    agentRoutes);
 
 // ── Static files ──────────────────────────────────────────────────────────────
 const frontendDir = path.join(__dirname, "..", "..", "Front-end");

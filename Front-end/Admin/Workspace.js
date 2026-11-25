@@ -405,11 +405,27 @@ Your responsibilities:
     promptInput.focus();
   }
 
-  // --- Engine Switching (Gemini vs Luma) ---
+  const AGENT_SUGGESTIONS = [
+    { text: 'Build a low-poly sci-fi drone in Unity with hover animation', icon: 'fa-cube' },
+    { text: 'Compile a procedural GLB asset with metallic PBR shader', icon: 'fa-wand-magic-sparkles' },
+    { text: 'Batch-generate 3D sci-fi crate and import into Unity project', icon: 'fa-boxes-stacked' }
+  ];
+
+  // --- Engine Switching (Gemini vs Agent vs Luma) ---
   function setEngine(mode) {
     currentEngine = mode;
 
-    if (mode === 'gemini') {
+    if (mode === 'agent') {
+      engineGeminiBtn?.classList.remove('active');
+      engineLumaBtn?.classList.remove('active');
+      if (activeEngineChip) activeEngineChip.textContent = 'AI Agent';
+      if (lumaControlsBar) lumaControlsBar.style.display = 'none';
+      if (promptInput) promptInput.placeholder = 'Describe a 3D model or environment for AI Agent to build in Unity...';
+      if (welcomeGreetingSubject) welcomeGreetingSubject.textContent = 'Creator';
+      if (welcomeSubtitle) welcomeSubtitle.textContent = 'Autonomous AI Agent with human-approved CLI commands and Unity 3D compilation.';
+      if (inputDisclaimer) inputDisclaimer.textContent = 'AI Agent commands run in your isolated Unity project. You review and approve each CLI action.';
+      renderSuggestionCards(AGENT_SUGGESTIONS);
+    } else if (mode === 'gemini') {
       engineGeminiBtn?.classList.add('active');
       engineLumaBtn?.classList.remove('active');
       if (activeEngineChip) activeEngineChip.textContent = 'Gemini';
@@ -455,7 +471,9 @@ Your responsibilities:
   engineGeminiBtn?.addEventListener('click', () => setEngine('gemini'));
   engineLumaBtn?.addEventListener('click', () => setEngine('luma'));
   modeSwitchBtn?.addEventListener('click', () => {
-    setEngine(currentEngine === 'gemini' ? 'luma' : 'gemini');
+    if (currentEngine === 'gemini') setEngine('agent');
+    else if (currentEngine === 'agent') setEngine('luma');
+    else setEngine('gemini');
   });
 
   // Aspect Ratio Selection
@@ -540,12 +558,481 @@ Your responsibilities:
       return;
     }
 
-    if (currentEngine === 'luma') {
+    // Check if user explicitly typed /agent or /unity prefix
+    if (text.startsWith('/agent ') || text.startsWith('/unity ')) {
+      const cleanPrompt = text.replace(/^\/(agent|unity)\s+/, '').trim();
+      setEngine('agent');
+      handleAgentSend(cleanPrompt);
+      return;
+    }
+
+    const is3DModelBuildIntent = /\b(build|compile|create|generate|animate)\b.*\b(unity|drone|sword|character|mesh|glb|asset|scene)\b/i.test(text);
+
+    if (currentEngine === 'agent' || is3DModelBuildIntent) {
+      handleAgentSend(text);
+    } else if (currentEngine === 'luma') {
       handleLumaSend(text);
     } else {
       handleGeminiSend(text);
     }
   }
+
+  // --- Autonomous AI Agent Request Handler with Human-in-the-Loop CLI Approvals ---
+  async function handleAgentSend(text) {
+    isGenerating = true;
+    welcomeBox.style.display = 'none';
+
+    let sessions = getStoredSessions();
+    if (!currentSessionId) {
+      currentSessionId = 'session_' + Date.now();
+      const newSession = {
+        id: currentSessionId,
+        title: generateSessionTitle(text),
+        createdAt: new Date().toISOString(),
+        engine: 'agent',
+        messages: []
+      };
+      sessions.unshift(newSession);
+      saveStoredSessions(sessions);
+      renderChatHistoryList();
+    }
+
+    appendMessage(text, 'user');
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+    sendBtn.disabled = true;
+
+    const botMsg = appendMessage('', 'bot');
+    const bubble = botMsg.querySelector('.bubble');
+    bubble.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; color: #0284c7; font-weight: 500; font-size: 13px;">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <span>AI Agent initializing 3D compilation plan & tool sequence...</span>
+      </div>
+    `;
+    scrollToBottom();
+
+    try {
+      const runRes = await fetch('/api/agent/runs', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          prompt: text,
+          jobId: 'job_' + Date.now()
+        })
+      });
+
+      if (runRes.status === 401) {
+        localStorage.removeItem('ather_session');
+        window.location.href = `/Login/login.html?next=${encodeURIComponent('/Admin/Workspace.html')}`;
+        return;
+      }
+
+      const runData = await runRes.json();
+      if (!runRes.ok || !runData.success) {
+        throw new Error(runData.message || 'Failed to start AI Agent run');
+      }
+
+      const runId = runData.data?.runId || runData.data?._id;
+      if (!runId) throw new Error('No run ID returned from backend');
+
+      await pollAgentRun(runId, botMsg);
+    } catch (err) {
+      console.error('Agent pipeline error:', err);
+      bubble.innerHTML = `
+        <div style="color: #dc2626; font-size: 13px; line-height: 1.5;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <strong>AI Agent Error:</strong> ${escapeHtml(err.message)}
+        </div>
+      `;
+    } finally {
+      isGenerating = false;
+      sendBtn.disabled = promptInput.value.trim() === '';
+    }
+  }
+
+  // Poll Agent Run State
+  async function pollAgentRun(runId, botMsg) {
+    const bubble = botMsg.querySelector('.bubble');
+    let isFinished = false;
+    let pollCount = 0;
+    const maxPolls = 150;
+    const renderedArtifacts = new Set();
+
+    while (!isFinished && pollCount < maxPolls) {
+      pollCount++;
+      try {
+        const res = await fetch(`/api/agent/runs/${runId}`, { headers: authHeaders() });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const run = data.data?.run;
+        const steps = data.data?.steps || [];
+        const artifacts = data.data?.artifacts || [];
+
+        if (run.status === 'RUNNING' || run.status === 'QUEUED') {
+          bubble.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; color: #0284c7; font-size: 13px;">
+              <i class="fa-solid fa-gear fa-spin"></i>
+              <span>AI Agent orchestrating step ${steps.length}...</span>
+            </div>
+          `;
+        }
+
+        // Render or update each step card
+        for (const step of steps) {
+          const stepKey = step._id || `${runId}_${step.index}`;
+          let stepEl = document.getElementById(`step-card-${stepKey}`);
+
+          if (!stepEl) {
+            stepEl = renderStepCard(runId, step);
+            botMsg.appendChild(stepEl);
+            scrollToBottom();
+          } else {
+            updateStepCard(stepEl, runId, step);
+          }
+        }
+
+        // Render any new artifacts (3D models)
+        for (const art of artifacts) {
+          const artKey = art._id || art.fileName;
+          if (!renderedArtifacts.has(artKey)) {
+            renderedArtifacts.add(artKey);
+            const artEl = render3DArtifactCard(runId, art);
+            botMsg.appendChild(artEl);
+            scrollToBottom();
+          }
+        }
+
+        if (run.status === 'AWAITING_APPROVAL') {
+          bubble.innerHTML = `
+            <div style="color: #d97706; font-size: 13px; font-weight: 500;">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>CLI approval required. Please review the command below to authorize execution.</span>
+            </div>
+          `;
+        } else if (run.status === 'SUCCEEDED') {
+          isFinished = true;
+          bubble.innerHTML = `
+            <div style="color: #059669; font-size: 13px; font-weight: 600;">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>3D Model & Unity compilation pipeline completed successfully!</span>
+            </div>
+          `;
+          break;
+        } else if (run.status === 'FAILED' || run.status === 'CANCELLED') {
+          isFinished = true;
+          bubble.innerHTML = `
+            <div style="color: #dc2626; font-size: 13px;">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>AI Agent run ${run.status.toLowerCase()}: ${escapeHtml(run.error || 'Execution stopped')}</span>
+            </div>
+          `;
+          break;
+        }
+      } catch (err) {
+        console.warn('Agent poll error:', err);
+      }
+
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+
+  // Render Step Card Element
+  function renderStepCard(runId, step) {
+    const card = document.createElement('div');
+    const stepKey = step._id || `${runId}_${step.index}`;
+    card.id = `step-card-${stepKey}`;
+    card.className = 'agent-card-container';
+    updateStepCardContent(card, runId, step);
+    return card;
+  }
+
+  function updateStepCard(card, runId, step) {
+    updateStepCardContent(card, runId, step);
+  }
+
+  function updateStepCardContent(card, runId, step) {
+    const risk = (step.risk || 'medium').toLowerCase();
+    const isAwaiting = step.status === 'PROPOSED' || step.status === 'AWAITING_APPROVAL';
+    const isRunning = step.status === 'RUNNING';
+    const isDone = step.status === 'SUCCEEDED';
+    const isDenied = step.status === 'DENIED';
+
+    let actionsHtml = '';
+    if (isAwaiting) {
+      actionsHtml = `
+        <div class="agent-card-actions">
+          <button type="button" class="btn-agent-allow" onclick="window.submitAgentDecision('${runId}', '${step._id}', 'allow')">
+            <i class="fa-solid fa-terminal"></i> Allow (Execute CLI)
+          </button>
+          <button type="button" class="btn-agent-deny" onclick="window.submitAgentDecision('${runId}', '${step._id}', 'deny')">
+            <i class="fa-solid fa-ban"></i> Deny Command
+          </button>
+        </div>
+      `;
+    } else if (isRunning) {
+      actionsHtml = `
+        <div class="agent-status-pill running">
+          <i class="fa-solid fa-gear fa-spin"></i> Executing Command in Unity...
+        </div>
+      `;
+    } else if (isDone) {
+      actionsHtml = `
+        <div class="agent-status-pill completed">
+          <i class="fa-solid fa-check"></i> Executed Successfully
+        </div>
+      `;
+    } else if (isDenied) {
+      actionsHtml = `
+        <div class="agent-status-pill denied">
+          <i class="fa-solid fa-ban"></i> Execution Denied by User
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="agent-card-header">
+        <div class="agent-card-title">
+          <i class="fa-solid fa-cube"></i>
+          <span>Step ${step.index + 1}: ${escapeHtml(step.tool)}</span>
+          <span class="agent-step-pill">${escapeHtml(step.status)}</span>
+        </div>
+        <span class="risk-badge ${risk}">
+          <i class="fa-solid fa-shield-halved"></i> ${risk} risk
+        </span>
+      </div>
+
+      <div class="agent-reason-quote">
+        ${escapeHtml(step.reason || 'Preparing model synthesis')}
+      </div>
+
+      ${step.cwd ? `
+        <div class="agent-cwd-row">
+          <i class="fa-regular fa-folder-open"></i>
+          <span>Working Dir: ${escapeHtml(step.cwd)}</span>
+        </div>
+      ` : ''}
+
+      ${step.command ? `
+        <div class="agent-cmd-box">
+          <code>${escapeHtml(step.command)}</code>
+        </div>
+      ` : ''}
+
+      ${actionsHtml}
+    `;
+  }
+
+  // Submit User Decision for Human-In-The-Loop Approval
+  window.submitAgentDecision = async function(runId, stepId, decision) {
+    try {
+      const res = await fetch(`/api/agent/runs/${runId}/steps/${stepId}/decision`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          decision,
+          decisionNote: decision === 'deny' ? 'User denied CLI command' : undefined
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        showWorkspaceToast(data.message || 'Failed to submit decision', 'error');
+      } else {
+        showWorkspaceToast(decision === 'allow' ? 'Command approved and running in background!' : 'Command denied. Agent recovering.', 'info');
+      }
+    } catch (err) {
+      showWorkspaceToast('Error submitting decision: ' + err.message, 'error');
+    }
+  };
+
+  // Render 3D Asset Viewport with Three.js & GLTFLoader
+  function render3DArtifactCard(runId, art) {
+    const card = document.createElement('div');
+    card.className = 'agent-3d-card';
+    const canvasId = 'canvas_3d_' + (art._id || Date.now());
+    const artUrl = `/api/agent/artifacts/${art._id}`;
+
+    card.innerHTML = `
+      <div class="agent-3d-header">
+        <div class="agent-3d-title">
+          <i class="fa-solid fa-cubes" style="color: #0284c7;"></i>
+          <span>Generated 3D Asset: ${escapeHtml(art.fileName)}</span>
+        </div>
+        <span class="agent-step-pill" style="background: #e0f2fe; color: #0284c7;">
+          ${(art.fileSize / 1024).toFixed(1)} KB
+        </span>
+      </div>
+
+      <div class="agent-3d-canvas-wrap">
+        <canvas id="${canvasId}" class="agent-3d-canvas"></canvas>
+        <div class="agent-3d-overlay-badge">WebGL 2.0 · Three.js Orbit Controls</div>
+        <div class="agent-3d-controls-bar">
+          <button type="button" class="btn-viewport-ctrl" id="btn-wf-${canvasId}" title="Toggle Wireframe">
+            <i class="fa-solid fa-border-none"></i>
+          </button>
+          <button type="button" class="btn-viewport-ctrl" id="btn-rot-${canvasId}" title="Toggle Auto-Rotate">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+          <button type="button" class="btn-viewport-ctrl" id="btn-rst-${canvasId}" title="Reset Camera">
+            <i class="fa-solid fa-arrows-to-dot"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="agent-3d-toolbar">
+        <div class="agent-3d-actions-group">
+          <a href="${artUrl}" download="${escapeHtml(art.fileName)}" class="btn-3d-download">
+            <i class="fa-solid fa-download"></i> Download .GLB
+          </a>
+          <button type="button" class="btn-unity-open" onclick="window.openInUnity('${runId}')">
+            <i class="fa-brands fa-unity"></i> Open in Unity Project
+          </button>
+        </div>
+      </div>
+    `;
+
+    setTimeout(() => {
+      initArtifactThreeScene(canvasId, artUrl);
+    }, 100);
+
+    return card;
+  }
+
+  // Interactive Three.js Scene Loader for Generated 3D Asset
+  function initArtifactThreeScene(canvasId, glbUrl) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof THREE === 'undefined') return;
+
+    const wrap = canvas.parentElement;
+    const width = wrap.clientWidth || 600;
+    const height = wrap.clientHeight || 380;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 1.5, 3.5);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 2.0;
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444455, 1.0);
+    scene.add(hemiLight);
+
+    const dirLight1 = new THREE.DirectionalLight(0x38bdf8, 1.5);
+    dirLight1.position.set(5, 10, 7);
+    scene.add(dirLight1);
+
+    const dirLight2 = new THREE.DirectionalLight(0xc084fc, 0.8);
+    dirLight2.position.set(-5, -5, -5);
+    scene.add(dirLight2);
+
+    const gridHelper = new THREE.GridHelper(10, 20, 0x0284c7, 0x1e293b);
+    gridHelper.position.y = -0.5;
+    scene.add(gridHelper);
+
+    let loadedModel = null;
+    let isWireframe = false;
+
+    if (typeof THREE.GLTFLoader !== 'undefined') {
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        glbUrl,
+        (gltf) => {
+          loadedModel = gltf.scene;
+          const box = new THREE.Box3().setFromObject(loadedModel);
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale = maxDim > 0 ? 1.8 / maxDim : 1;
+          loadedModel.scale.set(scale, scale, scale);
+
+          const center = box.getCenter(new THREE.Vector3());
+          loadedModel.position.sub(center.multiplyScalar(scale));
+
+          scene.add(loadedModel);
+        },
+        undefined,
+        (err) => {
+          console.warn('GLTFLoader fallback:', err);
+          const geom = new THREE.BoxGeometry(1, 1, 1);
+          const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
+          loadedModel = new THREE.Mesh(geom, mat);
+          scene.add(loadedModel);
+        }
+      );
+    } else {
+      const geom = new THREE.BoxGeometry(1, 1, 1);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8, roughness: 0.2 });
+      loadedModel = new THREE.Mesh(geom, mat);
+      scene.add(loadedModel);
+    }
+
+    const btnWf = document.getElementById(`btn-wf-${canvasId}`);
+    btnWf?.addEventListener('click', () => {
+      isWireframe = !isWireframe;
+      if (loadedModel) {
+        loadedModel.traverse((child) => {
+          if (child.isMesh && child.material) {
+            child.material.wireframe = isWireframe;
+          }
+        });
+      }
+    });
+
+    const btnRot = document.getElementById(`btn-rot-${canvasId}`);
+    btnRot?.addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+    });
+
+    const btnRst = document.getElementById(`btn-rst-${canvasId}`);
+    btnRst?.addEventListener('click', () => {
+      camera.position.set(0, 1.5, 3.5);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      if (wrap.clientWidth > 0 && wrap.clientHeight > 0) {
+        camera.aspect = wrap.clientWidth / wrap.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+      }
+    });
+  }
+
+  // Open Model in Unity Project
+  window.openInUnity = async function(runId) {
+    try {
+      showWorkspaceToast('Launching Unity 3D Project Editor...', 'info');
+      const res = await fetch(`/api/agent/runs`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          prompt: 'open_in_unity',
+          jobId: 'unity_open_' + Date.now()
+        })
+      });
+      showWorkspaceToast('Unity Editor process started.', 'success');
+    } catch (err) {
+      showWorkspaceToast('Failed to open Unity: ' + err.message, 'error');
+    }
+  };
 
   // --- Gemini AI Request Handler ---
   async function handleGeminiSend(text) {
