@@ -319,17 +319,31 @@ Your responsibilities:
       const messageEl = document.createElement('div');
 
       if (msg.role === 'user') {
-        messageEl.classList.add('message', 'user');
-        messageEl.innerHTML = `<div class="bubble">${escapeHtml(msg.text)}</div>`;
+        messageEl.classList.add('chat-message-row', 'user-message-row');
+        messageEl.innerHTML = `
+          <div class="user-bubble-wrap">
+            <div class="bubble user-bubble">${escapeHtml(msg.text)}</div>
+          </div>
+        `;
         conversationHistory.push({ role: 'user', parts: [{ text: msg.text }] });
       } else if (msg.role === 'luma') {
-        messageEl.classList.add('message', 'luma-message');
+        messageEl.classList.add('chat-message-row', 'bot-message-row');
         messageEl.innerHTML = renderCompletedLumaCardHtml(msg);
       } else {
-        messageEl.classList.add('message', 'bot');
+        messageEl.classList.add('chat-message-row', 'bot-message-row');
         messageEl.innerHTML = `
-          <div class="bot-avatar" title="Aether3D Core"><i class="fa-solid fa-cube"></i></div>
-          <div class="bubble">${formatMarkdown(msg.text)}</div>
+          <div class="bot-avatar-col">
+            <div class="bot-avatar-icon" title="Aether3D AI Core">
+              <i class="fa-solid fa-cube"></i>
+            </div>
+          </div>
+          <div class="bot-content-col">
+            <div class="bot-meta-header">
+              <span class="bot-meta-name">Aether3D</span>
+              <span class="bot-meta-tag">AI Assistant</span>
+            </div>
+            <div class="bubble bot-bubble">${formatMarkdown(msg.text)}</div>
+          </div>
         `;
         conversationHistory.push({ role: 'model', parts: [{ text: msg.text }] });
       }
@@ -1429,13 +1443,13 @@ Your responsibilities:
     return new Promise((resolve) => {
       bubbleElement.innerHTML = '';
       let index = 0;
-      const chunkSize = 3;
+      const step = Math.max(4, Math.ceil(fullText.length / 90));
       
       const interval = setInterval(() => {
         if (index < fullText.length) {
-          const chunk = fullText.slice(0, index + chunkSize);
+          index = Math.min(index + step, fullText.length);
+          const chunk = fullText.slice(0, index);
           bubbleElement.innerHTML = formatMarkdown(chunk);
-          index += chunkSize;
           scrollToBottom();
         } else {
           bubbleElement.innerHTML = formatMarkdown(fullText);
@@ -1443,45 +1457,124 @@ Your responsibilities:
           scrollToBottom();
           resolve();
         }
-      }, 10);
+      }, 12);
     });
   }
 
-  // --- Format Markdown Text to HTML ---
+  // --- Format Markdown Text to High-Quality Clean HTML ---
   function formatMarkdown(text) {
-    let formatted = escapeHtml(text);
+    if (!text) return '';
 
-    // Code blocks
-    formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre style="background: #09090d; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 14px; margin: 8px 0; overflow-x: auto; font-family: monospace; font-size: 13px; color: #e9d5ff;"><code>$1</code></pre>');
+    // Extract and protect code blocks
+    const codeBlocks = [];
+    let processed = text.replace(/```([a-zA-Z0-9_\-\+]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+      const id = '@@@BLOCK' + codeBlocks.length + '@@@';
+      codeBlocks.push({ lang: lang || 'text', code: code.trim() });
+      return id;
+    });
 
-    // Inline code
-    formatted = formatted.replace(/`([^`]+)`/g, '<code style="background: rgba(168, 85, 247, 0.12); color: #d8b4fe; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 13px;">$1</code>');
+    // Extract and protect inline code
+    const inlineCodes = [];
+    processed = processed.replace(/`([^`\n]+)`/g, (match, code) => {
+      const id = '@@@INLINE' + inlineCodes.length + '@@@';
+      inlineCodes.push(code);
+      return id;
+    });
 
-    // Bold
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #ffffff; font-weight: 600;">$1</strong>');
+    // Horizontal Rule (--- or ***)
+    processed = processed.replace(/^[\-\*]{3,}$/gm, '<hr class="md-hr" />');
 
-    // Bullet points
-    formatted = formatted.replace(/^\s*[\*\-]\s+(.*)$/gm, '<div style="display: flex; gap: 8px; margin: 4px 0;"><span style="color: var(--accent-purple);">•</span><span>$1</span></div>');
+    // Headings (#, ##, ###, ####)
+    processed = processed.replace(/^####[ \t]+(.*$)/gm, '<h4 class="md-h4">$1</h4>');
+    processed = processed.replace(/^###[ \t]+(.*$)/gm, '<h3 class="md-h3">$1</h3>');
+    processed = processed.replace(/^##[ \t]+(.*$)/gm, '<h2 class="md-h2">$1</h2>');
+    processed = processed.replace(/^#[ \t]+(.*$)/gm, '<h1 class="md-h1">$1</h1>');
 
-    // Numbered lists
-    formatted = formatted.replace(/^\s*(\d+)\.\s+(.*)$/gm, '<div style="display: flex; gap: 8px; margin: 4px 0;"><span style="color: var(--accent-purple); font-weight: 600;">$1.</span><span>$2</span></div>');
+    // Blockquotes
+    processed = processed.replace(/^>[ \t]+(.*$)/gm, '<blockquote class="md-quote">$1</blockquote>');
 
-    // Line breaks
-    formatted = formatted.replace(/\n/g, '<br/>');
+    // Bold (**text** or __text__)
+    processed = processed.replace(/\*\*([^*]+)\*\*/g, '<strong class="md-bold">$1</strong>');
+    processed = processed.replace(/__([^_]+)__/g, '<strong class="md-bold">$1</strong>');
 
-    return formatted;
+    // Italic (*text* or _text_)
+    processed = processed.replace(/\*([^*]+)\*/g, '<em class="md-em">$1</em>');
+    processed = processed.replace(/\b_([^_]+)_\b/g, '<em class="md-em">$1</em>');
+
+    // Numbered list items: 1. Item
+    processed = processed.replace(/^([0-9]+)\.[ \t]+(.*)$/gm, '<div class="md-list-item md-ol-item"><span class="md-list-num">$1.</span><div class="md-list-content">$2</div></div>');
+
+    // Bullet list items: - Item or * Item
+    processed = processed.replace(/^[\*\-][ \t]+(.*)$/gm, '<div class="md-list-item md-ul-item"><span class="md-list-bullet">•</span><div class="md-list-content">$1</div></div>');
+
+    // Paragraph gaps & line breaks
+    processed = processed.replace(/\n\n+/g, '<div class="md-p-gap"></div>');
+    processed = processed.replace(/\n/g, '<br />');
+
+    // Clean redundant breaks following headers and block elements
+    processed = processed.replace(/(<\/(?:h[1-4]|blockquote)>|<hr[^>]*>|<\/div>)<br \/>/gi, '$1');
+
+    // Restore inline code
+    inlineCodes.forEach((code, idx) => {
+      const safe = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      processed = processed.replace('@@@INLINE' + idx + '@@@', '<code class="md-code">' + safe + '</code>');
+    });
+
+    // Restore code blocks
+    codeBlocks.forEach((block, idx) => {
+      const safe = block.code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const blockHtml = [
+        '<div class="md-code-block">',
+        '  <div class="md-code-header">',
+        '    <span class="md-code-lang">' + (block.lang || 'code') + '</span>',
+        '    <button type="button" class="btn-copy-code" onclick="window.copyCodeSnippet(this)"><i class="fa-regular fa-copy"></i> Copy</button>',
+        '  </div>',
+        '  <pre class="md-code-pre"><code>' + safe + '</code></pre>',
+        '</div>'
+      ].join('\n');
+      processed = processed.replace('@@@BLOCK' + idx + '@@@', blockHtml);
+    });
+
+    return processed;
   }
+
+  // Global Code Copy Helper
+  window.copyCodeSnippet = function(btn) {
+    const block = btn.closest('.md-code-block');
+    const code = block ? block.querySelector('code')?.innerText || '' : '';
+    if (!code) return;
+    navigator.clipboard.writeText(code).then(() => {
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fa-regular fa-copy"></i> Copy';
+      }, 2000);
+    });
+  };
 
   function appendMessage(text, sender) {
     const messageEl = document.createElement('div');
-    messageEl.classList.add('message', sender);
+    messageEl.classList.add('chat-message-row', sender === 'user' ? 'user-message-row' : 'bot-message-row');
 
     if (sender === 'user') {
-      messageEl.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+      messageEl.innerHTML = `
+        <div class="user-bubble-wrap">
+          <div class="bubble user-bubble">${escapeHtml(text)}</div>
+        </div>
+      `;
     } else {
       messageEl.innerHTML = `
-        <div class="bot-avatar" title="Aether3D Core"><i class="fa-solid fa-cube"></i></div>
-        <div class="bubble"></div>
+        <div class="bot-avatar-col">
+          <div class="bot-avatar-icon" title="Aether3D AI Core">
+            <i class="fa-solid fa-cube"></i>
+          </div>
+        </div>
+        <div class="bot-content-col">
+          <div class="bot-meta-header">
+            <span class="bot-meta-name">Aether3D</span>
+            <span class="bot-meta-tag">AI Assistant</span>
+          </div>
+          <div class="bubble bot-bubble"></div>
+        </div>
       `;
     }
 
