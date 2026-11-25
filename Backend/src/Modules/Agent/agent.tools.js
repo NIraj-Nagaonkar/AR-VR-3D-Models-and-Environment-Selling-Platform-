@@ -148,6 +148,7 @@ Design 4 to 12 stylized primitive parts that compose the user's requested 3D mod
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(8000),
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: `Create a 3D procedural manifest for: ${promptText}` }] }],
         system_instruction: { parts: [{ text: systemPrompt }] },

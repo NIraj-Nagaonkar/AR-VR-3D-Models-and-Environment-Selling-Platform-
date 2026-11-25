@@ -692,15 +692,17 @@ Your responsibilities:
   }
 
   // Poll Agent Run State
+  window.agentRunPollers = window.agentRunPollers || {};
+
   async function pollAgentRun(runId, botMsg) {
     const bubble = botMsg.querySelector('.bubble');
     let isFinished = false;
     let pollCount = 0;
-    const maxPolls = 150;
+    const maxPolls = 3000;
     const renderedArtifacts = new Set();
+    let pollTimeout = null;
 
-    while (!isFinished && pollCount < maxPolls) {
-      pollCount++;
+    const doPoll = async () => {
       try {
         const res = await fetch(`/api/agent/runs/${runId}`, { headers: authHeaders() });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -708,6 +710,8 @@ Your responsibilities:
         const run = data.data?.run;
         const steps = data.data?.steps || [];
         const artifacts = data.data?.artifacts || [];
+
+        if (!run) return;
 
         if (run.status === 'RUNNING' || run.status === 'QUEUED') {
           bubble.innerHTML = `
@@ -744,6 +748,7 @@ Your responsibilities:
         }
 
         if (run.status === 'AWAITING_APPROVAL') {
+          pollCount = 0; // Reset counter while awaiting human decision
           bubble.innerHTML = `
             <div style="color: #d97706; font-size: 13px; font-weight: 500;">
               <i class="fa-solid fa-shield-halved"></i>
@@ -758,7 +763,6 @@ Your responsibilities:
               <span>3D Model & Unity compilation pipeline completed successfully!</span>
             </div>
           `;
-          break;
         } else if (run.status === 'FAILED' || run.status === 'CANCELLED') {
           isFinished = true;
           bubble.innerHTML = `
@@ -767,13 +771,25 @@ Your responsibilities:
               <span>AI Agent run ${run.status.toLowerCase()}: ${escapeHtml(run.error || 'Execution stopped')}</span>
             </div>
           `;
-          break;
         }
       } catch (err) {
         console.warn('Agent poll error:', err);
       }
+    };
 
-      await new Promise(r => setTimeout(r, 1500));
+    window.agentRunPollers[runId] = async () => {
+      clearTimeout(pollTimeout);
+      await doPoll();
+    };
+
+    while (!isFinished && pollCount < maxPolls) {
+      pollCount++;
+      await doPoll();
+      if (isFinished) {
+        delete window.agentRunPollers[runId];
+        break;
+      }
+      await new Promise(r => { pollTimeout = setTimeout(r, 1500); });
     }
   }
 
@@ -811,9 +827,19 @@ Your responsibilities:
         </div>
       `;
     } else if (isRunning) {
+      let runningLabel = 'Executing command in background...';
+      if (step.tool === 'plan_model') {
+        runningLabel = 'Compiling 3D spatial manifest and geometry...';
+      } else if (step.tool === 'build_model_unity') {
+        runningLabel = 'Executing Unity CLI batchmode mesh compilation...';
+      } else if (step.tool === 'animate_model_unity') {
+        runningLabel = 'Applying kinematic animation rig in Unity...';
+      } else if (step.tool === 'import_to_unity') {
+        runningLabel = 'Importing 3D asset into Unity project...';
+      }
       actionsHtml = `
         <div class="agent-status-pill running">
-          <i class="fa-solid fa-gear fa-spin"></i> Executing Command in Unity...
+          <i class="fa-solid fa-gear fa-spin"></i> ${escapeHtml(runningLabel)}
         </div>
       `;
     } else if (isDone) {
@@ -834,7 +860,7 @@ Your responsibilities:
       <div class="agent-card-header">
         <div class="agent-card-title">
           <i class="fa-solid fa-cube"></i>
-          <span>Step ${step.index + 1}: ${escapeHtml(step.tool)}</span>
+          <span>Step ${step.index || 1}: ${escapeHtml(step.tool)}</span>
           <span class="agent-step-pill">${escapeHtml(step.status)}</span>
         </div>
         <span class="risk-badge ${risk}">
@@ -878,7 +904,11 @@ Your responsibilities:
       if (!res.ok || !data.success) {
         showWorkspaceToast(data.message || 'Failed to submit decision', 'error');
       } else {
-        showWorkspaceToast(decision === 'allow' ? 'Command approved and running in background!' : 'Command denied. Agent recovering.', 'info');
+        showWorkspaceToast(decision === 'allow' ? 'Command approved and executing...' : 'Command denied.', 'info');
+        // Trigger immediate polling refresh to update step state in UI
+        if (typeof window.agentRunPollers?.[runId] === 'function') {
+          window.agentRunPollers[runId]();
+        }
       }
     } catch (err) {
       showWorkspaceToast('Error submitting decision: ' + err.message, 'error');
