@@ -642,18 +642,45 @@ html, body {
   transition: var(--transition-fast);
 }
 
-.engine-status-pill:hover {
-  border-color: var(--border-purple);
-  background: #f0f9ff;
-  color: var(--accent-purple-deep);
+/* Engine Mode Segmented Control Tabs */
+.engine-mode-tabs {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
 }
 
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent-purple);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+.mode-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.mode-tab-btn i {
+  font-size: 12px;
+}
+
+.mode-tab-btn:hover {
+  color: #0f172a;
+}
+
+.mode-tab-btn.active {
+  background: #ffffff;
+  color: #0284c7;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
 .btn-nav-action {

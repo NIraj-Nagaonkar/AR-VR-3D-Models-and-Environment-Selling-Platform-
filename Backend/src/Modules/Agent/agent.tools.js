@@ -46,6 +46,41 @@ function planSpatialManifest(promptText) {
       { id: 'wall_right', parent: 'floor', shape: 'box', transform: { position: [1.5, 1.5, 0], scale: [0.2, 2.8, 4.0] }, material: { color: '#0284c7', metallic: 0.8, roughness: 0.2 } },
       { id: 'ceiling', parent: 'floor', shape: 'box', transform: { position: [0, 3.0, 0], scale: [3.0, 0.2, 4.0] }, material: { color: '#0f172a', metallic: 0.5, roughness: 0.5 } }
     ];
+  } else if (p.includes('tree') || p.includes('plant') || p.includes('foliage') || p.includes('vegetation')) {
+    assetName = 'LowPolyTree';
+    parts = [
+      { id: 'trunk', parent: null, shape: 'cylinder', transform: { position: [0, 1.0, 0], scale: [0.35, 2.0, 0.35] }, material: { color: '#78350f', metallic: 0.1, roughness: 0.9 } },
+      { id: 'foliage_base', parent: 'trunk', shape: 'sphere', transform: { position: [0, 2.2, 0], scale: [1.8, 1.4, 1.8] }, material: { color: '#15803d', metallic: 0.05, roughness: 0.8 } },
+      { id: 'foliage_mid', parent: 'trunk', shape: 'sphere', transform: { position: [0, 3.0, 0], scale: [1.4, 1.2, 1.4] }, material: { color: '#16a34a', metallic: 0.05, roughness: 0.75 } },
+      { id: 'foliage_top', parent: 'trunk', shape: 'sphere', transform: { position: [0, 3.7, 0], scale: [0.9, 0.9, 0.9] }, material: { color: '#22c55e', metallic: 0.05, roughness: 0.7 } }
+    ];
+    animations = [
+      { preset: 'swing', targets: ['foliage_top', 'foliage_mid'], axis: 'z', secondsPerTurn: 3.0, loop: true }
+    ];
+  } else if (p.includes('sword') || p.includes('blade') || p.includes('weapon')) {
+    assetName = 'SciFiEnergyBlade';
+    parts = [
+      { id: 'hilt', parent: null, shape: 'cylinder', transform: { position: [0, 0.3, 0], scale: [0.12, 0.6, 0.12] }, material: { color: '#0f172a', metallic: 0.9, roughness: 0.2 } },
+      { id: 'guard', parent: 'hilt', shape: 'box', transform: { position: [0, 0.65, 0], scale: [0.6, 0.08, 0.16] }, material: { color: '#0284c7', metallic: 0.85, roughness: 0.25 } },
+      { id: 'blade', parent: 'guard', shape: 'box', transform: { position: [0, 1.8, 0], scale: [0.14, 2.2, 0.04] }, material: { color: '#38bdf8', metallic: 0.95, roughness: 0.1 } }
+    ];
+    animations = [
+      { preset: 'bob', targets: ['hilt'], axis: 'y', secondsPerTurn: 2.0, loop: true }
+    ];
+  } else if (p.includes('character') || p.includes('robot') || p.includes('bot') || p.includes('mech')) {
+    assetName = 'CompactScoutMech';
+    parts = [
+      { id: 'torso', parent: null, shape: 'box', transform: { position: [0, 1.2, 0], scale: [0.9, 1.0, 0.7] }, material: { color: '#0284c7', metallic: 0.8, roughness: 0.25 } },
+      { id: 'head', parent: 'torso', shape: 'box', transform: { position: [0, 1.9, 0], scale: [0.55, 0.45, 0.55] }, material: { color: '#0f172a', metallic: 0.9, roughness: 0.1 } },
+      { id: 'visor', parent: 'head', shape: 'box', transform: { position: [0, 1.9, 0.3], scale: [0.4, 0.15, 0.05] }, material: { color: '#38bdf8', metallic: 0.3, roughness: 0.1 } },
+      { id: 'arm_l', parent: 'torso', shape: 'cylinder', transform: { position: [-0.65, 1.1, 0], scale: [0.18, 0.8, 0.18] }, material: { color: '#1e293b', metallic: 0.7, roughness: 0.3 } },
+      { id: 'arm_r', parent: 'torso', shape: 'cylinder', transform: { position: [0.65, 1.1, 0], scale: [0.18, 0.8, 0.18] }, material: { color: '#1e293b', metallic: 0.7, roughness: 0.3 } },
+      { id: 'leg_l', parent: 'torso', shape: 'cylinder', transform: { position: [-0.3, 0.4, 0], scale: [0.22, 0.8, 0.22] }, material: { color: '#1e293b', metallic: 0.7, roughness: 0.3 } },
+      { id: 'leg_r', parent: 'torso', shape: 'cylinder', transform: { position: [0.3, 0.4, 0], scale: [0.22, 0.8, 0.22] }, material: { color: '#1e293b', metallic: 0.7, roughness: 0.3 } }
+    ];
+    animations = [
+      { preset: 'bob', targets: ['torso'], axis: 'y', secondsPerTurn: 1.5, loop: true }
+    ];
   } else {
     assetName = 'ModularPropAsset';
     parts = [
@@ -67,6 +102,76 @@ function planSpatialManifest(promptText) {
   };
 }
 
+// Dynamic Spatial Reasoning with Gemini
+async function planSpatialManifestWithGemini(promptText) {
+  if (!process.env.GEMINI_API_KEY) {
+    return planSpatialManifest(promptText);
+  }
+
+  try {
+    const systemPrompt = `You are the Aether3D Procedural Spatial Engine. Return ONLY a valid JSON object representing a 3D model manifest conforming strictly to this schema:
+{
+  "schemaVersion": 2,
+  "assetName": "CamelCaseName",
+  "targetSizeMeters": 2.0,
+  "parts": [
+    {
+      "id": "unique_part_id",
+      "parent": null or "parent_id",
+      "shape": "box" | "cylinder" | "sphere",
+      "transform": {
+        "position": [x, y, z],
+        "rotation": [x, y, z],
+        "scale": [w, h, d]
+      },
+      "material": {
+        "color": "#hex",
+        "metallic": 0.0 to 1.0,
+        "roughness": 0.0 to 1.0
+      }
+    }
+  ],
+  "animations": [
+    {
+      "preset": "spin" | "bob" | "swing" | "slide",
+      "targets": ["part_id"],
+      "axis": "x" | "y" | "z",
+      "secondsPerTurn": 1.5,
+      "loop": true
+    }
+  ]
+}
+Design 4 to 12 stylized primitive parts that compose the user's requested 3D model. Output pure JSON without markdown code fences.`;
+
+    const modelName = process.env.GEMINI_AGENT_MODEL || 'gemini-flash-latest';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: `Create a 3D procedural manifest for: ${promptText}` }] }],
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: { response_mime_type: 'application/json' }
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (rawText) {
+        const parsed = JSON.parse(rawText);
+        if (parsed.parts && Array.isArray(parsed.parts) && parsed.parts.length > 0) {
+          return parsed;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Gemini dynamic manifest fallback:', err.message);
+  }
+
+  return planSpatialManifest(promptText);
+}
+
 async function executeTool({ tool, args, context, stepRecord }) {
   const jobDir = context.jobDir;
   if (!fs.existsSync(jobDir)) {
@@ -76,7 +181,7 @@ async function executeTool({ tool, args, context, stepRecord }) {
   switch (tool) {
     case 'plan_model': {
       const prompt = args.prompt || context.initialPrompt || '3D Asset';
-      const manifest = planSpatialManifest(prompt);
+      const manifest = await planSpatialManifestWithGemini(prompt);
       const manifestPath = path.join(jobDir, 'manifest.json');
       fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
 

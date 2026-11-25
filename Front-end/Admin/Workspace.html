@@ -100,14 +100,21 @@
         </div>
 
         <div class="top-nav-right">
-          <!-- Active AI Engine Pill -->
-          <button class="engine-status-pill" id="aiStatusBadge" title="Click to configure AI Engine">
-            <span class="status-dot"></span>
-            <span class="status-name">Gemini Flash 3.6</span>
-          </button>
-          <span class="luma-status-pill" id="lumaStatusBadge" style="display: none;">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> Luma Ready
-          </span>
+          <!-- Engine Mode Tabs (Switch between 3D AI Agent, Gemini Chat, and Luma 3D) -->
+          <div class="engine-mode-tabs" id="engineModeTabs">
+            <button type="button" class="mode-tab-btn active" id="tabModeAgent" data-mode="agent" title="Autonomous 3D AI Agent (Unity)">
+              <i class="fa-solid fa-cube"></i>
+              <span>3D AI Agent</span>
+            </button>
+            <button type="button" class="mode-tab-btn" id="tabModeGemini" data-mode="gemini" title="Gemini Spatial Text & Shaders">
+              <i class="fa-solid fa-brain"></i>
+              <span>Gemini Chat</span>
+            </button>
+            <button type="button" class="mode-tab-btn" id="tabModeLuma" data-mode="luma" title="Luma 3D Studio">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Luma 3D</span>
+            </button>
+          </div>
 
           <!-- Action Buttons (Clean & Useful 3D Tools) -->
           <button class="btn-nav-action" id="btnDownloadGLB" title="Export 3D Model Asset (.GLB)">

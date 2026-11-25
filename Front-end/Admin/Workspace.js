@@ -194,7 +194,7 @@ Your responsibilities:
   let conversationHistory = [];
   let isGenerating = false;
   let currentSessionId = null;
-  let currentEngine = 'gemini'; // 'gemini' | 'luma'
+  let currentEngine = 'agent'; // 'agent' | 'gemini' | 'luma'
   let selectedLumaRatio = '16:9';
 
   // --- Key & Model Accessors ---
@@ -305,8 +305,10 @@ Your responsibilities:
     // Set engine based on session
     if (session.engine === 'luma') {
       setEngine('luma');
-    } else {
+    } else if (session.engine === 'gemini') {
       setEngine('gemini');
+    } else {
+      setEngine('agent');
     }
 
     // Highlight active sidebar item
@@ -420,19 +422,24 @@ Your responsibilities:
   }
 
   const AGENT_SUGGESTIONS = [
-    { text: 'Build a low-poly sci-fi drone in Unity with hover animation', icon: 'fa-cube' },
-    { text: 'Compile a procedural GLB asset with metallic PBR shader', icon: 'fa-wand-magic-sparkles' },
-    { text: 'Batch-generate 3D sci-fi crate and import into Unity project', icon: 'fa-boxes-stacked' }
+    { text: 'Build a low-poly tree with foliage sway animation in Unity', icon: 'fa-tree' },
+    { text: 'Build a sci-fi cyber drone with hover animation in Unity', icon: 'fa-cube' },
+    { text: 'Build a scout rover with rotating wheels in Unity', icon: 'fa-car' },
+    { text: 'Compile a sci-fi energy blade with metallic PBR shader', icon: 'fa-wand-magic-sparkles' }
   ];
 
-  // --- Engine Switching (Gemini vs Agent vs Luma) ---
+  // --- Engine Switching (3D Agent vs Gemini vs Luma) ---
   function setEngine(mode) {
     currentEngine = mode;
+
+    document.querySelectorAll('.mode-tab-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+    });
 
     if (mode === 'agent') {
       engineGeminiBtn?.classList.remove('active');
       engineLumaBtn?.classList.remove('active');
-      if (activeEngineChip) activeEngineChip.textContent = 'AI Agent';
+      if (activeEngineChip) activeEngineChip.textContent = '3D Agent';
       if (lumaControlsBar) lumaControlsBar.style.display = 'none';
       if (promptInput) promptInput.placeholder = 'Describe a 3D model or environment for AI Agent to build in Unity...';
       if (welcomeGreetingSubject) welcomeGreetingSubject.textContent = 'Creator';
@@ -482,12 +489,20 @@ Your responsibilities:
     });
   }
 
+  // Wire up Top Mode Tabs
+  document.querySelectorAll('.mode-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mode = btn.getAttribute('data-mode');
+      if (mode) setEngine(mode);
+    });
+  });
+
   engineGeminiBtn?.addEventListener('click', () => setEngine('gemini'));
   engineLumaBtn?.addEventListener('click', () => setEngine('luma'));
   modeSwitchBtn?.addEventListener('click', () => {
-    if (currentEngine === 'gemini') setEngine('agent');
-    else if (currentEngine === 'agent') setEngine('luma');
-    else setEngine('gemini');
+    if (currentEngine === 'agent') setEngine('gemini');
+    else if (currentEngine === 'gemini') setEngine('luma');
+    else setEngine('agent');
   });
 
   // Aspect Ratio Selection
@@ -572,6 +587,14 @@ Your responsibilities:
       return;
     }
 
+    // Check if user explicitly typed /gemini or /chat prefix
+    if (text.startsWith('/gemini ') || text.startsWith('/chat ')) {
+      const cleanPrompt = text.replace(/^\/(gemini|chat)\s+/, '').trim();
+      setEngine('gemini');
+      handleGeminiSend(cleanPrompt);
+      return;
+    }
+
     // Check if user explicitly typed /agent or /unity prefix
     if (text.startsWith('/agent ') || text.startsWith('/unity ')) {
       const cleanPrompt = text.replace(/^\/(agent|unity)\s+/, '').trim();
@@ -580,12 +603,15 @@ Your responsibilities:
       return;
     }
 
-    const is3DModelBuildIntent = /\b(build|compile|create|generate|animate)\b.*\b(unity|drone|sword|character|mesh|glb|asset|scene)\b/i.test(text);
+    // Comprehensive 3D Model Building Intent:
+    const is3DModelBuildIntent = currentEngine === 'agent' ||
+      /\b(3d|model|mesh|tree|plant|vegetation|drone|rover|car|sword|blade|weapon|building|house|corridor|prop|character|robot|mech|glb|unity|build|compile|create|generate|make|animate)\b/i.test(text);
 
-    if (currentEngine === 'agent' || is3DModelBuildIntent) {
-      handleAgentSend(text);
-    } else if (currentEngine === 'luma') {
+    if (currentEngine === 'luma') {
       handleLumaSend(text);
+    } else if (currentEngine === 'agent' || is3DModelBuildIntent) {
+      if (currentEngine !== 'agent') setEngine('agent');
+      handleAgentSend(text);
     } else {
       handleGeminiSend(text);
     }
@@ -3141,7 +3167,7 @@ Your responsibilities:
   if (lumaModelSelect) {
     lumaModelSelect.value = getActiveLumaModel();
   }
-  setEngine('gemini');
+  setEngine('agent');
   renderChatHistoryList();
   initVisualStudio();
   loadUserProfile();
